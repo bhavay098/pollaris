@@ -1,50 +1,44 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import api from "../lib/api";
+import { createContext, useContext } from "react";
+import { authClient } from "../lib/auth-client";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchMe = async () => {
-    try {
-      const response = await api.me();
-      setUser(response.data);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMe();
-  }, []);
+  const { data: session, isPending: loading, refetch } = authClient.useSession();
+  const user = session?.user || null;
 
   const login = async (payload) => {
-    const response = await api.login(payload);
-    setUser(response.data.user);
-    return response;
+    const { data, error } = await authClient.signIn.email(payload);
+    if (error) throw new Error(error.message);
+    return data;
   };
 
   const register = async (payload) => {
-    const response = await api.register(payload);
-    setUser(response.data.user);
-    return response;
+    const { data, error } = await authClient.signUp.email(payload);
+    if (error) throw new Error(error.message);
+    return data;
   };
 
   const logout = async () => {
-    await api.logout();
-    setUser(null);
+    const { error } = await authClient.signOut();
+    if (error) throw new Error(error.message);
   };
 
-  const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshMe: fetchMe }),
-    [user, loading],
-  );
+  const loginWithGoogle = async () => {
+    const { error } = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+    });
+    if (error) throw new Error(error.message);
+  };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, loading, login, register, loginWithGoogle, logout, refreshMe: refetch }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

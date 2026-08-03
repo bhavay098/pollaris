@@ -48,8 +48,7 @@ const questionSchema = new mongoose.Schema(
 const pollSchema = new mongoose.Schema(
   {
     createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,
       required: true,
       index: true,
     },

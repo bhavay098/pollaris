@@ -30,8 +30,7 @@ const responseSchema = new mongoose.Schema(
       required: true,
     },
     respondentUserId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,
       default: null,
     },
     respondentHash: {

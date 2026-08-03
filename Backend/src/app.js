@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
-import authRoutes from "./modules/auth/auth.routes.js";
-import cookieParser from "cookie-parser";
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./common/config/auth.js";
 import pollsRoutes from "./modules/polls/polls.routes.js";
 import publicRoutes from "./modules/public/public.routes.js";
 import ApiError from "./common/utils/api-error.js";
@@ -14,11 +14,12 @@ app.use(
     credentials: true,
   }),
 );
+
+// Better Auth must receive the raw request body before Express parses JSON.
+app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());
-app.use(cookieParser());
 
 // Routes
-app.use("/api/auth", authRoutes);
 app.use("/api/polls", pollsRoutes);
 app.use("/api/public", publicRoutes);
 

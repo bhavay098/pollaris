@@ -23,20 +23,6 @@ const request = async (path, options = {}) => {
 };
 
 const api = {
-  // Authentication Methods
-  register: (payload) =>
-    request("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-
-  login: (payload) =>
-    request("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
-
-  logout: () => request("/auth/logout", { method: "POST" }),
-
-  me: () => request("/auth/me"),
-
   // Poll APIs
 
   createPoll: (payload) =>

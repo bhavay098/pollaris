@@ -1,27 +1,22 @@
-import { verifyAccessToken } from "../../common/utils/jwt.utils.js";
-
-import User from "./user.model.js";
-
 import ApiError from "../../common/utils/api-error.js";
+import { auth } from "../../common/config/auth.js";
+import { fromNodeHeaders } from "better-auth/node";
 
 const authenticate = async (req, res, next) => {
-  const token = req.cookies.accessToken;
+  try {
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    });
 
-  if (!token) {
-    throw ApiError.unauthorized("Access token required");
+    if (!session?.user) {
+      throw ApiError.unauthorized("Authentication is required");
+    }
+
+    req.user = session.user;
+    next();
+  } catch (error) {
+    next(error);
   }
-
-  const decoded = verifyAccessToken(token);
-
-  const user = await User.findById(decoded.userId).select("-password");
-
-  if (!user) {
-    throw ApiError.unauthorized("User not found");
-  }
-
-  req.user = user;
-
-  next();
 };
 
 export default authenticate;

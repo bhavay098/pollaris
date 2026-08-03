@@ -32,11 +32,25 @@ A full-stack poll platform built for hackathon requirements.
 
 Backend runs on `http://localhost:3000` by default.
 
+### Authentication setup
+
+PollCraft uses Better Auth with MongoDB for email/password and Google sign-in. Add these values to `Backend/.env`:
+
+```env
+BETTER_AUTH_SECRET=<generate with: openssl rand -base64 32>
+BETTER_AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=<Google OAuth client ID>
+GOOGLE_CLIENT_SECRET=<Google OAuth client secret>
+```
+
+In Google Cloud Console, add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI. Use your deployed backend URL for production.
+
 ## Frontend Setup
 1. Install dependencies:
    - `cd Frontend && npm install`
 2. (Optional) configure env in `Frontend/.env`:
    - `VITE_API_BASE_URL=http://localhost:3000/api`
+   - `VITE_AUTH_BASE_URL=http://localhost:3000/api/auth`
    - `VITE_SOCKET_URL=http://localhost:3000`
 3. Start frontend:
    - `npm run dev`
@@ -45,11 +59,7 @@ Frontend runs on `http://localhost:5173` by default.
 
 ## Main API Endpoints
 ### Auth
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `POST /api/auth/refresh-token`
-- `GET /api/auth/me`
+- Better Auth handles `/api/auth/*`, including email/password and Google OAuth routes.
 
 ### Creator Polls (Protected)
 - `POST /api/polls`

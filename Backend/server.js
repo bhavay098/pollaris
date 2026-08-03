@@ -4,7 +4,8 @@ import app from "./src/app.js";
 import { Server } from "socket.io";
 import connectDB from "./src/common/config/db.js";
 import { setIO } from "./src/common/config/socket.js";
-import { verifyAccessToken } from "./src/common/utils/jwt.utils.js";
+import { auth } from "./src/common/config/auth.js";
+import { fromNodeHeaders } from "better-auth/node";
 import Poll from "./src/modules/polls/poll.model.js";
 
 const PORT = process.env.PORT || 3000;
@@ -25,20 +26,16 @@ io.on("connection", (socket) => {
 
   socket.on("poll:join_owner", async ({ pollId }) => {
     try {
-      const rawCookies = socket.handshake.headers.cookie || "";
-      const accessCookie = rawCookies
-        .split(";")
-        .map((part) => part.trim())
-        .find((part) => part.startsWith("accessToken="));
-      const token = accessCookie ? decodeURIComponent(accessCookie.slice("accessToken=".length)) : null;
-      if (!token) {
+      const session = await auth.api.getSession({
+        headers: fromNodeHeaders(socket.handshake.headers),
+      });
+      if (!session?.user) {
         return socket.emit("poll:error", { message: "Unauthorized" });
       }
 
-      const decoded = verifyAccessToken(token);
       const poll = await Poll.findOne({
         _id: pollId,
-        createdBy: decoded.userId,
+        createdBy: session.user.id,
       });
       if (!poll) {
         return socket.emit("poll:error", { message: "Forbidden" });

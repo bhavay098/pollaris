@@ -84,7 +84,7 @@ const submitPublicResponse = async (req, res, next) => {
     };
 
     if (req.user) {
-      payload.respondentUserId = req.user._id;
+      payload.respondentUserId = req.user.id;
     } else {
       payload.respondentHash = hashRespondent(req);
     }

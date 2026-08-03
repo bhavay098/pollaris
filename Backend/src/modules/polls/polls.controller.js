@@ -16,7 +16,7 @@ const createPoll = async (req, res, next) => {
     const sanitized = validateAndNormalizePollInput(req.body);
 
     const poll = await Poll.create({
-      createdBy: req.user._id,
+      createdBy: req.user.id,
       title: sanitized.title,
       description: sanitized.description,
       slug: generateSlug(),
@@ -34,7 +34,7 @@ const createPoll = async (req, res, next) => {
 const getMyPolls = async (req, res, next) => {
   try {
     const polls = await Poll.aggregate([
-      { $match: { createdBy: req.user._id } },
+      { $match: { createdBy: req.user.id } },
       { $sort: { createdAt: -1 } },
       {
         $lookup: {
@@ -69,7 +69,7 @@ const getMyPolls = async (req, res, next) => {
 
 const getPollById = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user._id });
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
       throw ApiError.notfound("Poll not found");
@@ -89,7 +89,7 @@ const getPollById = async (req, res, next) => {
 
 const updatePoll = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user._id });
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
       throw ApiError.notfound("Poll not found");
@@ -118,7 +118,7 @@ const updatePoll = async (req, res, next) => {
 
 const publishPoll = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user._id });
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
       throw ApiError.notfound("Poll not found");
@@ -152,7 +152,7 @@ const publishPoll = async (req, res, next) => {
 
 const getAnalyticsSummary = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user._id });
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
       throw ApiError.notfound("Poll not found");
@@ -178,7 +178,7 @@ const getAnalyticsSummary = async (req, res, next) => {
 
 const getAnalyticsQuestions = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user._id }).lean();
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id }).lean();
 
     if (!poll) {
       throw ApiError.notfound("Poll not found");
@@ -200,7 +200,7 @@ const getAnalyticsQuestions = async (req, res, next) => {
 
 const getAnalyticsParticipation = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user._id }).lean();
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id }).lean();
 
     if (!poll) {
       throw ApiError.notfound("Poll not found");
