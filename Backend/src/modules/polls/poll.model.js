@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// A single answer choice within a question (e.g. "Yes", "No", "Maybe").
+// Uses a client-generated `optionId` rather than Mongo's _id to keep
+// the embedded document lightweight and to allow stable references
+// from the frontend even before the poll is saved.
 const optionSchema = new mongoose.Schema(
   {
     optionId: {
@@ -14,9 +18,11 @@ const optionSchema = new mongoose.Schema(
       maxlength: 200,
     },
   },
-  { _id: false },
+  { _id: false }, // Prevent Mongo from adding a separate _id on each option
 );
 
+// A single question inside a poll. Each question carries its own list
+// of options and can optionally be marked optional for the respondent.
 const questionSchema = new mongoose.Schema(
   {
     questionId: {
@@ -32,7 +38,7 @@ const questionSchema = new mongoose.Schema(
     },
     isRequired: {
       type: Boolean,
-      default: true,
+      default: true, // By default every question must be answered
     },
     options: {
       type: [optionSchema],
@@ -42,15 +48,17 @@ const questionSchema = new mongoose.Schema(
       },
     },
   },
-  { _id: false },
+  { _id: false }, // Prevent Mongo from adding a separate _id on each question
 );
 
+// Root schema for a poll. A poll belongs to a creator, contains at least
+// one question, and goes through a publish lifecycle (draft → published).
 const pollSchema = new mongoose.Schema(
   {
     createdBy: {
       type: String,
       required: true,
-      index: true,
+      index: true, // Indexed for "find all polls by this user" queries
     },
     title: {
       type: String,
@@ -62,32 +70,34 @@ const pollSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 800,
-      default: "",
+      default: "", // Optional; empty string when not provided
     },
     slug: {
       type: String,
       required: true,
-      unique: true,
-      index: true,
+      unique: true, // URL-friendly public identifier; no duplicates allowed
+      index: true,  // Used heavily for public-facing lookups
     },
     responseMode: {
       type: String,
       enum: ["ANONYMOUS", "AUTHENTICATED"],
       default: "ANONYMOUS",
+      // ANONYMOUS  → anyone can respond without logging in
+      // AUTHENTICATED → only signed-in users can respond
     },
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
+      index: true, // Queried frequently to find/purge expired polls
     },
     isPublished: {
       type: Boolean,
-      default: false,
+      default: false, // Drafts are not visible to the public until published
       index: true,
     },
     publishedAt: {
       type: Date,
-      default: null,
+      default: null, // Populated at the moment of first publish
     },
     questions: {
       type: [questionSchema],
@@ -98,9 +108,11 @@ const pollSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true },
+  { timestamps: true }, // Automatically adds createdAt and updatedAt fields
 );
 
+// Compound index: efficiently fetch a user's polls sorted newest-first
+// (e.g. "list my polls" dashboard query).
 pollSchema.index({ createdBy: 1, createdAt: -1 });
 
 export default mongoose.model("Poll", pollSchema);

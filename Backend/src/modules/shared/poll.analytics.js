@@ -1,6 +1,14 @@
+// Pure analytics helpers: all take poll questions + response documents and
+// return derived counts/percentages. No DB access or side effects, which
+// keeps them easy to test and reuse across owner and public endpoints.
+
+// Core counting routine. Returns a Map of questionId → { optionId: count }
+// with every option seeded to 0, then increments counts for each answer.
+// Shared by all the higher-level builders below.
 const buildOptionCountMatrix = (questions = [], responses = []) => {
   const byQuestion = new Map();
 
+  // Seed every option with a zero count so later lookups never miss.
   for (const question of questions) {
     byQuestion.set(
       question.questionId,
@@ -8,6 +16,7 @@ const buildOptionCountMatrix = (questions = [], responses = []) => {
     );
   }
 
+  // Tally the selected options across all responses.
   for (const response of responses) {
     for (const answer of response.answers || []) {
       const optionCounts = byQuestion.get(answer.questionId);
@@ -20,6 +29,7 @@ const buildOptionCountMatrix = (questions = [], responses = []) => {
   return byQuestion;
 };
 
+// Lightweight per-question option counts, used for live Socket.IO updates.
 const buildQuestionWiseOptionCounts = (questions = [], responses = []) => {
   const matrix = buildOptionCountMatrix(questions, responses);
 
@@ -29,6 +39,8 @@ const buildQuestionWiseOptionCounts = (questions = [], responses = []) => {
   }));
 };
 
+// Full owner-side analytics: per question, list every option with its text
+// and absolute vote count.
 const buildQuestionAnalytics = (questions = [], responses = []) => {
   const matrix = buildOptionCountMatrix(questions, responses);
 
@@ -44,6 +56,8 @@ const buildQuestionAnalytics = (questions = [], responses = []) => {
   }));
 };
 
+// Public result builder: same as question analytics but adds the percentage
+// share of each option among the answered responses for that question.
 const buildPublicQuestionResults = (questions = [], responses = []) => {
   const matrix = buildOptionCountMatrix(questions, responses);
 
@@ -60,6 +74,7 @@ const buildPublicQuestionResults = (questions = [], responses = []) => {
           optionId: option.optionId,
           text: option.text,
           count,
+          // Guard against division by zero when nobody answered the question.
           percentage: answeredCount ? Number(((count / answeredCount) * 100).toFixed(2)) : 0,
         };
       }),
@@ -67,6 +82,7 @@ const buildPublicQuestionResults = (questions = [], responses = []) => {
   });
 };
 
+// Per-question participation: how many respondents answered vs skipped.
 const buildParticipationInsights = (questions = [], responses = []) =>
   questions.map((question) => {
     const answered = responses.filter((response) =>
@@ -77,10 +93,13 @@ const buildParticipationInsights = (questions = [], responses = []) =>
       questionId: question.questionId,
       text: question.text,
       answeredCount: answered,
+      // skipCount can't go negative even if a response oddly contains
+      // duplicate answers to the same question.
       skipCount: Math.max(0, responses.length - answered),
     };
   });
 
+// Splits total responses into anonymous vs authenticated buckets.
 const buildParticipantBreakdown = (responses = []) => ({
   anonymous: responses.filter((r) => r.respondentType === "ANON").length,
   authenticated: responses.filter((r) => r.respondentType === "AUTH").length,

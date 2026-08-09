@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// One answer within a submitted response: which question was answered and
+// which option was picked. Stored as a plain object (no _id) to keep
+// response documents lean.
 const answerSchema = new mongoose.Schema(
   {
     questionId: {
@@ -16,6 +19,10 @@ const answerSchema = new mongoose.Schema(
   { _id: false },
 );
 
+// A single submission to a poll. The respondent is identified in one of two
+// mutually exclusive ways:
+//   - respondentUserId for authenticated users, or
+//   - respondentHash for anonymous users (hashed IP + user-agent)
 const responseSchema = new mongoose.Schema(
   {
     pollId: {
@@ -54,8 +61,12 @@ const responseSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Fetch a poll's responses newest-first (e.g. for live dashboards).
 responseSchema.index({ pollId: 1, submittedAt: -1 });
+// Enforce "one response per authenticated user" — sparse so documents
+// without a userId don't collide.
 responseSchema.index({ pollId: 1, respondentUserId: 1 }, { unique: true, sparse: true });
+// Same idea for anonymous respondents: one response per hash per poll.
 responseSchema.index({ pollId: 1, respondentHash: 1 }, { unique: true, sparse: true });
 
 export default mongoose.model("Response", responseSchema);

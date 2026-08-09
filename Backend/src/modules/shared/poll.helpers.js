@@ -1,12 +1,22 @@
+// Small, dependency-free helpers shared by the poll and public modules.
+
 import crypto from "node:crypto";
 
+// Generates a random URL-friendly identifier for a poll. 6 random bytes →
+// 12 hex chars, collision-resistant enough for user-facing slugs.
 const generateSlug = () => crypto.randomBytes(6).toString("hex");
 
+// Produces a stable, non-reversible identifier for an anonymous respondent
+// by hashing their IP + user-agent. Two submissions from the same person
+// yield the same hash (used to dedupe responses without storing raw IPs).
 const hashRespondent = (req) => {
   const source = `${req.ip || ""}|${req.headers["user-agent"] || ""}`;
   return crypto.createHash("sha256").update(source).digest("hex");
 };
 
+// Checks a poll can still accept responses. Returns an error descriptor
+// (ok: false + HTTP code/message) instead of throwing, so the caller
+// decides how to respond.
 const ensurePollActive = (poll) => {
   if (!poll) {
     return { ok: false, code: 404, message: "Poll not found" };
@@ -19,6 +29,8 @@ const ensurePollActive = (poll) => {
   return { ok: true };
 };
 
+// Builds the public-facing JSON shape of a poll: flattens Mongo's _id to a
+// friendly `id` and strips fields respondents shouldn't see (owner info).
 const formatPublicPoll = (poll) => ({
   id: poll._id,
   title: poll.title,

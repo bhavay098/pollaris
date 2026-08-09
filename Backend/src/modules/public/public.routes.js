@@ -1,3 +1,6 @@
+// Public (no-owner) routes: anyone can view a poll by slug and see results.
+// Submitting a response uses optional auth so anonymous respondents work too.
+
 import { Router } from "express";
 import authenticateOptional from "../shared/optional-auth.middleware.js";
 import {

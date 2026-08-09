@@ -1,3 +1,5 @@
+// Controller layer for poll endpoints: parses the request, calls the model/services, and sends a standardized response. Errors are forwarded to the Express error-handling middleware via next(error).
+
 import ApiError from "../../common/utils/api-error.js";
 import ApiResponse from "../../common/utils/api-response.js";
 import Poll from "./poll.model.js";
@@ -11,8 +13,10 @@ import {
 } from "../shared/poll.analytics.js";
 import { getIO } from "../../common/config/socket.js";
 
+// POST /polls — create a new poll owned by the authenticated user.
 const createPoll = async (req, res, next) => {
   try {
+    // Validate and normalize raw input up front so the model only receives clean, shape-checked data.
     const sanitized = validateAndNormalizePollInput(req.body);
 
     const poll = await Poll.create({
@@ -31,12 +35,17 @@ const createPoll = async (req, res, next) => {
   }
 };
 
+// GET /polls/mine — list the current user's polls with a live response count.
 const getMyPolls = async (req, res, next) => {
   try {
     const polls = await Poll.aggregate([
+      // Only return polls owned by the requesting user.
       { $match: { createdBy: req.user.id } },
+      // Newest polls first.
       { $sort: { createdAt: -1 } },
       {
+        // Join each poll with its response documents so we can count them
+        // without a separate query per poll (avoids an N+1 problem).
         $lookup: {
           from: "responses",
           localField: "_id",
@@ -45,6 +54,8 @@ const getMyPolls = async (req, res, next) => {
         },
       },
       {
+        // Shape the output: expose a friendly `id` field and computed
+        // metrics instead of the raw responses array.
         $project: {
           _id: 0,
           id: "$_id",
@@ -67,8 +78,10 @@ const getMyPolls = async (req, res, next) => {
   }
 };
 
+// GET /polls/:pollId — fetch a single poll (owner-only) plus response count.
 const getPollById = async (req, res, next) => {
   try {
+    // findOne scopes by the logged-in user, so users can only fetch their own polls.
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
@@ -87,6 +100,7 @@ const getPollById = async (req, res, next) => {
   }
 };
 
+// PATCH /polls/:pollId — edit poll details, blocked once responses exist.
 const updatePoll = async (req, res, next) => {
   try {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
@@ -97,10 +111,12 @@ const updatePoll = async (req, res, next) => {
 
     const existingResponses = await Response.countDocuments({ pollId: poll._id });
 
+    // Editing after responses would corrupt the analytics, so disallow it.
     if (existingResponses > 0) {
       throw ApiError.conflict("Poll cannot be edited after receiving responses");
     }
 
+    // Re-validate input and overwrite the editable fields in place.
     const sanitized = validateAndNormalizePollInput(req.body);
     poll.title = sanitized.title;
     poll.description = sanitized.description;
@@ -116,6 +132,7 @@ const updatePoll = async (req, res, next) => {
   }
 };
 
+// POST /polls/:pollId/publish — mark a poll as live and notify subscribers.
 const publishPoll = async (req, res, next) => {
   try {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
@@ -132,6 +149,8 @@ const publishPoll = async (req, res, next) => {
     poll.publishedAt = new Date();
     await poll.save();
 
+    // Broadcast the new status over Socket.IO to everyone watching this poll:
+    // the owner's dashboard room and the public viewer room keyed by slug.
     const io = getIO();
     io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", {
       pollId: String(poll._id),
@@ -150,6 +169,7 @@ const publishPoll = async (req, res, next) => {
   }
 };
 
+// GET /polls/:pollId/analytics/summary — high-level participation stats.
 const getAnalyticsSummary = async (req, res, next) => {
   try {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
@@ -158,6 +178,8 @@ const getAnalyticsSummary = async (req, res, next) => {
       throw ApiError.notfound("Poll not found");
     }
 
+    // .lean() returns plain objects (faster, no Mongoose document overhead)
+    // since these responses are only read, never mutated.
     const responses = await Response.find({ pollId: poll._id }).lean();
     const totalResponses = responses.length;
     const isExpired = new Date() > new Date(poll.expiresAt);
@@ -176,6 +198,7 @@ const getAnalyticsSummary = async (req, res, next) => {
   }
 };
 
+// GET /polls/:pollId/analytics/questions — per-question result breakdown.
 const getAnalyticsQuestions = async (req, res, next) => {
   try {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id }).lean();
@@ -198,6 +221,7 @@ const getAnalyticsQuestions = async (req, res, next) => {
   }
 };
 
+// GET /polls/:pollId/analytics/participation — insights on who/how participated.
 const getAnalyticsParticipation = async (req, res, next) => {
   try {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id }).lean();

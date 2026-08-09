@@ -1,7 +1,14 @@
+// Validates and normalizes poll input at the API boundary. Controllers call
+// validateAndNormalizePollInput before persisting so the DB only ever sees
+// clean, well-formed data. Throws ApiError on invalid input.
+
 import ApiError from "../../common/utils/api-error.js";
 
+// Response modes a poll can be created with.
 const ALLOWED_RESPONSE_MODES = ["ANONYMOUS", "AUTHENTICATED"];
 
+// Structural checks on the questions array: shape, presence of text, and a
+// minimum of two options per question.
 const validateQuestions = (questions = []) => {
   if (!Array.isArray(questions) || questions.length < 1) {
     throw ApiError.badRequest("Poll must contain at least one question");
@@ -24,6 +31,8 @@ const validateQuestions = (questions = []) => {
   }
 };
 
+// Fills in any missing ids (client may not provide them), trims text, and
+// defaults isRequired to true. Called after validation succeeds.
 const normalizeQuestions = (questions = []) =>
   questions.map((q, qIndex) => ({
     questionId: q.questionId || `q_${qIndex + 1}_${Date.now()}`,
@@ -35,6 +44,8 @@ const normalizeQuestions = (questions = []) =>
     })),
   }));
 
+// Main entry point: validates top-level poll fields and delegates the
+// questions to the helpers above, then returns a clean object to persist.
 const validateAndNormalizePollInput = ({
   title,
   description,
@@ -46,6 +57,7 @@ const validateAndNormalizePollInput = ({
     throw ApiError.badRequest("Title is required");
   }
 
+  // Expiry must be a real date in the future; reject anything else outright.
   const expiry = new Date(expiresAt);
   if (!expiresAt || Number.isNaN(expiry.getTime()) || expiry <= new Date()) {
     throw ApiError.badRequest("Expiry must be a valid future datetime");

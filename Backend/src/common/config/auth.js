@@ -1,9 +1,14 @@
+// Central Better Auth configuration shared by every route/middleware that
+// needs session handling. Uses MongoDB as the session and account store.
+
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
 
 const databaseUrl = process.env.MONGODB_URI;
 
+// Fail fast at startup if the DB connection string is missing — a running
+// server with no database would be useless and confusing.
 if (!databaseUrl) {
   throw new Error("MONGODB_URI is required for Better Auth");
 }
@@ -12,6 +17,8 @@ const mongoClient = new MongoClient(databaseUrl);
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
+// Google sign-in is only enabled when both env vars are present; otherwise
+// the poll creator can still sign up with email + password.
 const socialProviders =
   googleClientId && googleClientSecret
     ? {
