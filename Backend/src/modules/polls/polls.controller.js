@@ -85,7 +85,7 @@ const getPollById = async (req, res, next) => {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     const totalResponses = await Response.countDocuments({ pollId: poll._id });
@@ -106,7 +106,7 @@ const updatePoll = async (req, res, next) => {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     const existingResponses = await Response.countDocuments({ pollId: poll._id });
@@ -138,7 +138,7 @@ const publishPoll = async (req, res, next) => {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     if (poll.isPublished) {
@@ -175,7 +175,7 @@ const getAnalyticsSummary = async (req, res, next) => {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     // .lean() returns plain objects (faster, no Mongoose document overhead)
@@ -204,7 +204,7 @@ const getAnalyticsQuestions = async (req, res, next) => {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id }).lean();
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     const responses = await Response.find({ pollId: poll._id }).lean();
@@ -227,7 +227,7 @@ const getAnalyticsParticipation = async (req, res, next) => {
     const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id }).lean();
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     const responses = await Response.find({ pollId: poll._id }).lean();

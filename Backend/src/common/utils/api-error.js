@@ -25,11 +25,15 @@ class ApiError extends Error {
     return new ApiError(409, message);
   }
 
-  static forbidden(message = "forbidden") {
+  static gone(message = "Resource is no longer available") {
+    return new ApiError(410, message);
+  }
+
+  static forbidden(message = "Forbidden") {
     return new ApiError(403, message);
   }
 
-  static notfound(message = "notfound") {
+  static notFound(message = "Not found") {
     return new ApiError(404, message);
   }
 }

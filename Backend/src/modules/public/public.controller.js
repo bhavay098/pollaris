@@ -60,7 +60,7 @@ const getPublicPollBySlug = async (req, res, next) => {
     const poll = await Poll.findOne({ slug: req.params.slug }).lean();
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     const isExpired = new Date() > new Date(poll.expiresAt);
@@ -83,7 +83,11 @@ const submitPublicResponse = async (req, res, next) => {
     // Reject if the poll is missing or past its expiry.
     const state = ensurePollActive(poll);
     if (!state.ok) {
-      return res.status(state.code).json({ success: false, message: state.message });
+      if (state.code === 410) {
+        throw ApiError.gone(state.message);
+      }
+
+      throw ApiError.notFound(state.message);
     }
 
     // AUTHENTICATED polls require a signed-in respondent.
@@ -162,7 +166,7 @@ const getPublicResults = async (req, res, next) => {
     const poll = await Poll.findOne({ slug: req.params.slug }).lean();
 
     if (!poll) {
-      throw ApiError.notfound("Poll not found");
+      throw ApiError.notFound("Poll not found");
     }
 
     // Results stay hidden until the poll owner publishes the poll.

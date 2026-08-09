@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 
 // Catch-all: any route that doesn't match is turned into a 404 error.
 app.use((req, _res, next) => {
-  next(ApiError.notfound(`Route not found: ${req.method} ${req.originalUrl}`));
+  next(ApiError.notFound(`Route not found: ${req.method} ${req.originalUrl}`));
 });
 
 // Global error handler: logs server errors, sends a consistent JSON shape
