@@ -44,8 +44,7 @@ const getMyPolls = async (req, res, next) => {
       // Newest polls first.
       { $sort: { createdAt: -1 } },
       {
-        // Join each poll with its response documents so we can count them
-        // without a separate query per poll (avoids an N+1 problem).
+        // Join each poll with its response documents so we can count them without a separate query per poll (avoids an N+1 problem).
         $lookup: {
           from: "responses",
           localField: "_id",
@@ -54,8 +53,7 @@ const getMyPolls = async (req, res, next) => {
         },
       },
       {
-        // Shape the output: expose a friendly `id` field and computed
-        // metrics instead of the raw responses array.
+        // Shape the output: expose a friendly `id` field and computed metrics instead of the raw responses array.
         $project: {
           _id: 0,
           id: "$_id",
