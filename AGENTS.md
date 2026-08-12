@@ -64,7 +64,7 @@ These rules apply regardless of language or framework unless a section says othe
   but don't over-split trivial logic either.
 - Avoid unnecessary layers of indirection (e.g. don't wrap a simple function call in three helper functions
   "for structure" if it's not needed).
-- Only add comments where the *why* isn't obvious from the code itself. Don't narrate every line.
+- Only add comments where the _why_ isn't obvious from the code itself. Don't narrate every line.
 - Since I'm learning: briefly explain non-obvious decisions (e.g. why a library was chosen, why a pattern
   was used) in a short comment or a short note in your response — not a full lecture, just 1-2 lines.
 
@@ -135,12 +135,18 @@ These rules apply regardless of language or framework unless a section says othe
   (`package.json` scripts, `Makefile`, `README`, CI config) rather than guessing generic commands.
 - If this section is filled in for the current project, use these commands to verify your own work after
   changes:
-  - Install: `<fill in, e.g. npm install>`
-  - Run dev server: `<fill in>`
-  - Run tests: `<fill in>`
-  - Lint/format: `<fill in>`
-  - Build: `<fill in>`
-- If no commands are defined here and none are discoverable in the repo, ask me rather than guessing.
+  - Install:
+  - Run dev server:
+  - Run tests:
+  - Lint/format:
+  - Build:
+- If no commands are defined here and none are discoverable in the repo, choose sensible, standard defaults for
+  the language/stack in use (e.g. `npm test`/`vitest`/`jest` for a Node project with no test script yet, `pytest`
+  for Python, etc.) rather than stopping to ask. Briefly state what you set up and why. Don't silently invent
+  an unusual or heavyweight toolchain — pick the boring, widely-used default for that ecosystem.
+- If setting up a new tool (e.g. a test runner) requires adding a dependency, this still follows the Dependencies
+  (Section 5) and Stop and Ask (Section 12) rules — a standard test runner for the stack is fine to add on your
+  own judgment, but mention it; anything unusual or heavy should be flagged first.
 
 ## 11. Git & Commit Behavior
 
@@ -152,6 +158,7 @@ These rules apply regardless of language or framework unless a section says othe
 ## 12. Stop and Ask Before Proceeding
 
 Pause and check with me before doing any of the following, even if it seems like the obvious next step:
+
 - Deleting files, dropping database tables/columns, or any other irreversible/destructive action.
 - Writing or changing a database migration/schema.
 - Adding a new dependency that wasn't already in the project.
