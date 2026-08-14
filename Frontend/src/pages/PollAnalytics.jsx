@@ -2,7 +2,7 @@
 // owner. Shows response counts, per-question option breakdowns, participation
 // insights, and a "Publish Final Results" button. Data refreshes live over
 // WebSocket whenever a new response arrives.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
@@ -14,26 +14,53 @@ export default function PollAnalytics() {
   const [participation, setParticipation] = useState([]);
   const [error, setError] = useState("");
 
-  // Fetch all three analytics endpoints in parallel and store the results.
-  const loadAll = async () => {
+  // Fetch all three analytics endpoints in parallel.
+  const fetchAll = useCallback(async () => {
+    const [summaryRes, questionsRes, participationRes] = await Promise.all([
+      api.analyticsSummary(pollId),
+      api.analyticsQuestions(pollId),
+      api.analyticsParticipation(pollId),
+    ]);
+
+    return {
+      summary: summaryRes.data,
+      questions: questionsRes.data.questionWise || [],
+      participation: participationRes.data.insights || [],
+    };
+  }, [pollId]);
+
+  const applyAnalytics = (data) => {
+    setSummary(data.summary);
+    setQuestions(data.questions);
+    setParticipation(data.participation);
+  };
+
+  const loadAll = useCallback(async () => {
     try {
-      const [summaryRes, questionsRes, participationRes] = await Promise.all([
-        api.analyticsSummary(pollId),
-        api.analyticsQuestions(pollId),
-        api.analyticsParticipation(pollId),
-      ]);
-      setSummary(summaryRes.data);
-      setQuestions(questionsRes.data.questionWise || []);
-      setParticipation(participationRes.data.insights || []);
+      applyAnalytics(await fetchAll());
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [fetchAll]);
 
   // Initial load when the page or pollId changes.
   useEffect(() => {
-    loadAll();
-  }, [pollId]);
+    let cancelled = false;
+
+    const loadInitial = async () => {
+      try {
+        const data = await fetchAll();
+        if (!cancelled) applyAnalytics(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      }
+    };
+
+    void loadInitial();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchAll]);
 
   // Realtime: connect the socket, tell the backend we're the owner of this
   // poll, and re-fetch analytics whenever the backend broadcasts an update.
@@ -56,7 +83,7 @@ export default function PollAnalytics() {
       socket.off("poll:status_changed", onRealtime);
       socket.disconnect();
     };
-  }, [pollId]);
+  }, [loadAll, pollId]);
 
   // Make the results public/shared (publish final results), then refresh.
   const publish = async () => {

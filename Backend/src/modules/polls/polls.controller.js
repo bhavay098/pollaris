@@ -12,6 +12,7 @@ import {
   buildQuestionAnalytics,
 } from "../shared/poll.analytics.js";
 import { getIO } from "../../common/config/socket.js";
+import { withPollLock } from "../shared/poll-lock.js";
 
 // POST /polls — create a new poll owned by the authenticated user.
 const createPoll = async (req, res, next) => {
@@ -101,30 +102,41 @@ const getPollById = async (req, res, next) => {
 // PATCH /polls/:pollId — edit poll details, blocked once responses exist.
 const updatePoll = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+    const existingPoll = await Poll.findOne({
+      _id: req.params.pollId,
+      createdBy: req.user.id,
+    });
 
-    if (!poll) {
+    if (!existingPoll) {
       throw ApiError.notFound("Poll not found");
     }
 
-    const existingResponses = await Response.countDocuments({ pollId: poll._id });
+    return await withPollLock(String(existingPoll._id), async () => {
+      const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
-    // Editing after responses would corrupt the analytics, so disallow it.
-    if (existingResponses > 0) {
-      throw ApiError.conflict("Poll cannot be edited after receiving responses");
-    }
+      if (!poll) {
+        throw ApiError.notFound("Poll not found");
+      }
 
-    // Re-validate input and overwrite the editable fields in place.
-    const sanitized = validateAndNormalizePollInput(req.body);
-    poll.title = sanitized.title;
-    poll.description = sanitized.description;
-    poll.responseMode = sanitized.responseMode;
-    poll.expiresAt = sanitized.expiresAt;
-    poll.questions = sanitized.questions;
+      const existingResponses = await Response.countDocuments({ pollId: poll._id });
 
-    await poll.save();
+      // Editing after responses would corrupt the analytics, so disallow it.
+      if (existingResponses > 0) {
+        throw ApiError.conflict("Poll cannot be edited after receiving responses");
+      }
 
-    return ApiResponse.ok(res, "Poll updated successfully", { poll });
+      // Re-validate input and overwrite the editable fields in place.
+      const sanitized = validateAndNormalizePollInput(req.body);
+      poll.title = sanitized.title;
+      poll.description = sanitized.description;
+      poll.responseMode = sanitized.responseMode;
+      poll.expiresAt = sanitized.expiresAt;
+      poll.questions = sanitized.questions;
+
+      await poll.save();
+
+      return ApiResponse.ok(res, "Poll updated successfully", { poll });
+    });
   } catch (error) {
     next(error);
   }

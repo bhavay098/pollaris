@@ -11,21 +11,25 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const { user, logout } = useAuthStore();
 
-  // Fetch the logged-in user's polls from the backend.
-  const loadPolls = async () => {
-    try {
-      const response = await api.getMyPolls();
-      setPolls(response.data.polls);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Load polls once when the page mounts.
   useEffect(() => {
-    loadPolls();
+    let cancelled = false;
+
+    const loadPolls = async () => {
+      try {
+        const response = await api.getMyPolls();
+        if (!cancelled) setPolls(response.data.polls);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadPolls();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

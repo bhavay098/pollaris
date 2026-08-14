@@ -38,11 +38,9 @@ const responseSchema = new mongoose.Schema(
     },
     respondentUserId: {
       type: String,
-      default: null,
     },
     respondentHash: {
       type: String,
-      default: null,
     },
     answers: {
       type: [answerSchema],
@@ -65,8 +63,20 @@ const responseSchema = new mongoose.Schema(
 responseSchema.index({ pollId: 1, submittedAt: -1 });
 // Enforce "one response per authenticated user" — sparse so documents
 // without a userId don't collide.
-responseSchema.index({ pollId: 1, respondentUserId: 1 }, { unique: true, sparse: true });
+responseSchema.index(
+  { pollId: 1, respondentUserId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { respondentUserId: { $type: "string" } },
+  },
+);
 // Same idea for anonymous respondents: one response per hash per poll.
-responseSchema.index({ pollId: 1, respondentHash: 1 }, { unique: true, sparse: true });
+responseSchema.index(
+  { pollId: 1, respondentHash: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { respondentHash: { $type: "string" } },
+  },
+);
 
 export default mongoose.model("Response", responseSchema);

@@ -39,12 +39,21 @@ app.use((req, _res, next) => {
 // Global error handler: logs server errors, sends a consistent JSON shape
 // for everything else, and never leaks stack traces to the client.
 app.use((err, _req, res, _next) => {
-  if (err.statusCode >= 500 || !err.statusCode) {
+  const statusCode =
+    err.statusCode ||
+    err.status ||
+    (err.type === "entity.parse.failed" ? 400 : null) ||
+    (err.name === "ValidationError" || err.name === "CastError" ? 400 : null) ||
+    (err.code === 11000 ? 409 : null) ||
+    500;
+  const isServerError = statusCode >= 500;
+
+  if (isServerError) {
     console.error(err.stack);
   }
-  res.status(err.statusCode || 500).json({
+  res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal server error",
+    message: isServerError ? "Internal server error" : err.message || "Request failed",
   });
 });
 

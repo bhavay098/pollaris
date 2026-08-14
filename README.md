@@ -30,6 +30,13 @@ A full-stack poll platform built for hackathon requirements.
 3. Start backend:
    - `npm start`
 
+When deploying an existing database, rebuild the response indexes after pulling
+this version and before accepting traffic:
+
+```bash
+cd Backend && node scripts/rebuild-response-indexes.js
+```
+
 Backend runs on `http://localhost:3000` by default.
 
 ### Authentication setup

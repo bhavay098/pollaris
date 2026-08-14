@@ -1,7 +1,7 @@
 // Public poll page (route "/p/:slug"). This is the shareable link anyone can
 // open: visitors answer the questions, and if the owner has published final
 // results they see the results instead. Realtime via WebSocket.
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
@@ -26,24 +26,29 @@ export default function PublicPoll() {
   }, [poll]);
 
   // Fetch the poll by slug; if it's published, also pull its results.
-  const loadPoll = async () => {
+  const loadPoll = useCallback(async () => {
     try {
       const response = await api.getPublicPoll(slug);
-      setPoll(response.data.poll);
       if (response.data.poll.isPublished) {
         const resultRes = await api.getPublicResults(slug);
         setResults(resultRes.data);
+      } else {
+        setResults(null);
       }
+      setPoll(response.data.poll);
     } catch (err) {
+      setPoll(null);
+      setResults(null);
       setStatus((prev) => ({ ...prev, error: err.message }));
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
 
   useEffect(() => {
-    loadPoll();
-  }, [slug]);
+    setLoading(true);
+    void loadPoll();
+  }, [loadPoll]);
 
   // Realtime: join the public room for this poll. When new responses arrive
   // (and results are published) refresh the numbers; when the owner publishes
@@ -61,18 +66,19 @@ export default function PublicPoll() {
 
     socket.on("analytics:response_received", onRealtime);
     socket.on("analytics:question_updated", onRealtime);
-    socket.on("poll:status_changed", async () => {
-      await loadPoll();
-    });
+    const onStatusChanged = () => {
+      void loadPoll();
+    };
+    socket.on("poll:status_changed", onStatusChanged);
 
     // Cleanup on unmount: remove listeners and close the socket.
     return () => {
       socket.off("analytics:response_received", onRealtime);
       socket.off("analytics:question_updated", onRealtime);
-      socket.off("poll:status_changed");
+      socket.off("poll:status_changed", onStatusChanged);
       socket.disconnect();
     };
-  }, [slug, poll?.isPublished]);
+  }, [loadPoll, poll?.isPublished, slug]);
 
   // Convert the answers map {questionId: optionId} into the array shape the
   // backend expects, then POST it.

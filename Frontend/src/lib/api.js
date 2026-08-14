@@ -1,6 +1,6 @@
 // Central API wrapper for all REST calls to the backend.
 // The backend URL comes from the VITE_API_BASE_URL env var.
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 // Generic fetch wrapper: builds the URL, sends the request with cookies
 // (so the backend can identify the logged-in user), and parses the JSON body.

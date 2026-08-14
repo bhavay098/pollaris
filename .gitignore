@@ -1,2 +1,6 @@
 /.DS_Store
 /.agents
+.env
+.env.*
+!.env.example
+!**/.env.example
