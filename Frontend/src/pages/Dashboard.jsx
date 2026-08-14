@@ -9,6 +9,8 @@ export default function Dashboard() {
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [publishingId, setPublishingId] = useState(null);
+  const [sharingId, setSharingId] = useState(null);
   const { user, logout } = useAuthStore();
 
   // Load polls once when the page mounts.
@@ -31,6 +33,43 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, []);
+
+  const publishPoll = async (pollId) => {
+    setError("");
+    setPublishingId(pollId);
+
+    try {
+      await api.publishPoll(pollId);
+      setPolls((currentPolls) =>
+        currentPolls.map((poll) =>
+          poll.id === pollId ? { ...poll, isPublished: true } : poll,
+        ),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const sharePoll = async (poll) => {
+    const publicUrl = `${window.location.origin}/p/${poll.slug}`;
+    setError("");
+    setSharingId(poll.id);
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: poll.title, url: publicUrl });
+      } else {
+        await navigator.clipboard.writeText(publicUrl);
+      }
+    } catch (err) {
+      // Closing the native share sheet is not an error.
+      if (err?.name !== "AbortError") setError("Unable to share the poll link");
+    } finally {
+      setSharingId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
@@ -66,7 +105,28 @@ export default function Dashboard() {
               <div className="flex gap-2 mt-4 flex-wrap">
                 <Link className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" to={`/dashboard/polls/${poll.id}/edit`}>Edit</Link>
                 <Link className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" to={`/dashboard/polls/${poll.id}/analytics`}>Analytics</Link>
-                <a className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" href={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open Public Link</a>
+                {!poll.isPublished ? (
+                  <button
+                    className="bg-teal-500 hover:bg-teal-600 disabled:bg-zinc-700 rounded-lg px-3 py-2 text-sm font-medium"
+                    type="button"
+                    disabled={publishingId === poll.id}
+                    onClick={() => void publishPoll(poll.id)}
+                  >
+                    {publishingId === poll.id ? "Publishing..." : "Publish Poll"}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="bg-teal-500 hover:bg-teal-600 disabled:bg-zinc-700 rounded-lg px-3 py-2 text-sm font-medium"
+                      type="button"
+                      disabled={sharingId === poll.id}
+                      onClick={() => void sharePoll(poll)}
+                    >
+                      {sharingId === poll.id ? "Sharing..." : "Share Poll"}
+                    </button>
+                    <Link className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open Public Link</Link>
+                  </>
+                )}
               </div>
             </div>
           ))}

@@ -1,5 +1,6 @@
 // Bottom call-to-action banner on the home page, prompting sign-up/login.
 import ActionButton from "./ui/ActionButton.jsx";
+import { Link } from "react-router-dom";
 
 export default function CtaBanner() {
   return (
@@ -24,10 +25,10 @@ export default function CtaBanner() {
             faster, and more engaging polls.
           </p>
           <div className="mt-10 flex flex-wrap gap-4 justify-center">
-            <ActionButton as="a" href="/register" variant="accent" className="px-8 py-4 text-base font-bold">
+            <ActionButton as={Link} to="/register" variant="accent" className="px-8 py-4 text-base font-bold">
               Create Your First Poll — Free
             </ActionButton>
-            <ActionButton as="a" href="/login" variant="secondary" className="px-8 py-4 text-base">
+            <ActionButton as={Link} to="/login" variant="secondary" className="px-8 py-4 text-base">
               Login
             </ActionButton>
           </div>

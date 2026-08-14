@@ -47,7 +47,7 @@ export const useAuthStore = create((set, get) => ({
   loginWithGoogle: async () => {
     const { error } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
+      callbackURL: "http://localhost:5173/dashboard",
     });
     if (error) throw new Error(error.message);
   },

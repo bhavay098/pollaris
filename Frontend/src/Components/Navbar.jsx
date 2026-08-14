@@ -1,6 +1,7 @@
 // Fixed top navigation bar for the marketing pages. Shows the brand, anchor
 // links, and Login / Get Started buttons.
 import ActionButton from "./ui/ActionButton.jsx";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
@@ -39,16 +40,16 @@ export default function Navbar() {
             </nav>
             <div className="flex items-center gap-2.5">
               <ActionButton
-                as="a"
-                href="/login"
+                as={Link}
+                to="/login"
                 variant="subtle"
                 className="px-4 py-2 rounded-xl text-sm font-medium"
               >
                 Login
               </ActionButton>
               <ActionButton
-                as="a"
-                href="/register"
+                as={Link}
+                to="/register"
                 variant="accent"
                 className="px-5 py-2 rounded-xl text-sm font-semibold"
               >

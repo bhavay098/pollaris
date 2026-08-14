@@ -1,5 +1,5 @@
-// Reusable button/anchor. Renders a <button> by default, or an <a> when
-// `as="a"` is passed (so it can be used as a link). The `variant` prop picks
+// Reusable button/link. Renders a <button> by default, or the component passed
+// through `as` when it needs to be used as a link. The `variant` prop picks
 // the color style from the map below.
 const variantClasses = {
   primary: "bg-teal-500 text-white hover:bg-teal-600",
@@ -21,13 +21,11 @@ export default function ActionButton({
     "inline-flex items-center justify-center rounded-2xl font-semibold";
   const classes = `${base} ${variantClasses[variant]} ${className}`.trim();
 
-  // Render as a link when requested; otherwise a regular button.
-  if (as === "a") {
-    return (
-      <a className={classes} {...props}>
-        {children}
-      </a>
-    );
+  // Render as a button by default; otherwise render the requested element or
+  // component (for example, React Router's Link).
+  if (as !== "button") {
+    const Component = as;
+    return <Component className={classes} {...props}>{children}</Component>;
   }
 
   return (

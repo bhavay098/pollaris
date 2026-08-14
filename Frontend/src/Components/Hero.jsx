@@ -1,6 +1,7 @@
 // Hero (first) section of the home page: headline, call-to-action buttons,
 // and a mock "live poll" card on the right built from static demo data below.
 import ActionButton from "./ui/ActionButton.jsx";
+import { Link } from "react-router-dom";
 
 // Marketing stats shown under the CTAs.
 const stats = [
@@ -57,10 +58,10 @@ export default function Hero() {
             modern collaborative platform.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <ActionButton as="a" href="/register" className="px-7 py-3.5">
+            <ActionButton as={Link} to="/register" className="px-7 py-3.5">
               Launch Poll
             </ActionButton>
-            <ActionButton as="a" href="/login" variant="secondary" className="px-7 py-3.5">
+            <ActionButton as={Link} to="/login" variant="secondary" className="px-7 py-3.5">
               Login
             </ActionButton>
           </div>
