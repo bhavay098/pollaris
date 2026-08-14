@@ -146,8 +146,14 @@ export default function PollBuilder() {
 
         <form onSubmit={submit} className="space-y-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-            <input className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Poll title" required value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
-            <textarea className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Description" rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
+            <div className="space-y-1">
+              <label htmlFor="poll-title" className="text-sm text-zinc-300">Poll title</label>
+              <input id="poll-title" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Poll title" required value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="poll-description" className="text-sm text-zinc-300">Description</label>
+              <textarea id="poll-description" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Description" rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
+            </div>
             <div className="grid md:grid-cols-2 gap-3">
               <select className="w-full p-3 rounded-xl bg-zinc-800" value={form.responseMode} onChange={(e) => setForm((prev) => ({ ...prev, responseMode: e.target.value }))}>
                 <option value="ANONYMOUS">Anonymous responses</option>
@@ -165,7 +171,10 @@ export default function PollBuilder() {
                 <button type="button" className="text-red-400 text-sm" onClick={() => removeQuestion(qIndex)}>Remove</button>
               </div>
 
-              <input className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Question text" required value={question.text} onChange={(e) => updateQuestion(qIndex, { text: e.target.value })} />
+              <div className="space-y-1">
+                <label htmlFor={`question-${question.questionId}`} className="text-sm text-zinc-300">Question text</label>
+                <input id={`question-${question.questionId}`} className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Question text" required value={question.text} onChange={(e) => updateQuestion(qIndex, { text: e.target.value })} />
+              </div>
 
               <label className="flex items-center gap-2 text-sm text-zinc-300">
                 <input type="checkbox" checked={question.isRequired} onChange={(e) => updateQuestion(qIndex, { isRequired: e.target.checked })} />
@@ -175,7 +184,10 @@ export default function PollBuilder() {
               <div className="space-y-2">
                 {question.options.map((option, oIndex) => (
                   <div key={option.optionId} className="flex gap-2">
-                    <input className="flex-1 p-3 rounded-xl bg-zinc-800" placeholder={`Option ${oIndex + 1}`} required value={option.text} onChange={(e) => updateOption(qIndex, oIndex, e.target.value)} />
+                    <div className="flex-1 space-y-1">
+                      <label htmlFor={`option-${option.optionId}`} className="text-sm text-zinc-300">Option {oIndex + 1}</label>
+                      <input id={`option-${option.optionId}`} className="w-full p-3 rounded-xl bg-zinc-800" placeholder={`Option ${oIndex + 1}`} required value={option.text} onChange={(e) => updateOption(qIndex, oIndex, e.target.value)} />
+                    </div>
                     <button type="button" className="px-3 rounded-xl bg-zinc-800" onClick={() => removeOption(qIndex, oIndex)}>X</button>
                   </div>
                 ))}

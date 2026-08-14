@@ -14,16 +14,20 @@ const request = async (path, options = {}) => {
     ...options,
   });
 
-  // Only try to parse JSON if the server actually sent JSON.
+  if (!response.ok) {
+    // Read an error payload only after confirming the HTTP request failed.
+    const contentType = response.headers.get("content-type") || "";
+    const errorBody = contentType.includes("application/json")
+      ? await response.json()
+      : null;
+    throw new Error(errorBody?.message || `Request failed: ${response.status}`);
+  }
+
+  // Only try to parse JSON if the successful response actually sent JSON.
   const contentType = response.headers.get("content-type") || "";
   const body = contentType.includes("application/json")
     ? await response.json()
     : null;
-
-  // Non-2xx responses become thrown errors so callers can catch and show them.
-  if (!response.ok) {
-    throw new Error(body?.message || "Request failed");
-  }
 
   return body;
 };

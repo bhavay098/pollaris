@@ -45,8 +45,14 @@ export default function Login() {
     <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
       <form onSubmit={onSubmit} className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
         <h1 className="text-2xl font-bold">Login</h1>
-        <input className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Email" type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-        <input className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Password" type="password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+        <div className="space-y-1">
+          <label htmlFor="login-email" className="text-sm text-zinc-300">Email</label>
+          <input id="login-email" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Email" type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="login-password" className="text-sm text-zinc-300">Password</label>
+          <input id="login-password" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Password" type="password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+        </div>
         {error ? <p className="text-red-400 text-sm">{error}</p> : null}
         <button disabled={loading} className="w-full bg-teal-500 hover:bg-teal-600 rounded-xl p-3 font-semibold">{loading ? "Logging in..." : "Login"}</button>
         <button type="button" disabled={loading} onClick={onGoogleLogin} className="w-full border border-zinc-700 hover:bg-zinc-800 rounded-xl p-3 font-semibold">Continue with Google</button>
