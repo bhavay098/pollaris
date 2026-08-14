@@ -1,3 +1,4 @@
+// Bottom call-to-action banner on the home page, prompting sign-up/login.
 import ActionButton from "./ui/ActionButton.jsx";
 
 export default function CtaBanner() {

@@ -1,3 +1,5 @@
+// Marketing section listing the platform's four main capabilities.
+// Data is static: each feature just supplies its title, blurb, icon, and color.
 const features = [
   {
     title: "Live Analytics",

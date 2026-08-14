@@ -1,23 +1,31 @@
+// Public poll page (route "/p/:slug"). This is the shareable link anyone can
+// open: visitors answer the questions, and if the owner has published final
+// results they see the results instead. Realtime via WebSocket.
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/auth-store";
 
 export default function PublicPoll() {
   const { slug } = useParams();
-  const { user } = useAuth();
+  // Needed to enforce "authenticated responses only" polls below.
+  const { user } = useAuthStore();
   const [poll, setPoll] = useState(null);
+  // answers maps questionId -> selected optionId as the visitor fills the form.
   const [answers, setAnswers] = useState({});
+  // submitted/message/error tracks the form submission result.
   const [status, setStatus] = useState({ submitted: false, message: "", error: "" });
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState(null);
 
+  // True once the poll's expiry date has passed (disables submitting).
   const isExpired = useMemo(() => {
     if (!poll?.expiresAt) return false;
     return new Date() > new Date(poll.expiresAt);
   }, [poll]);
 
+  // Fetch the poll by slug; if it's published, also pull its results.
   const loadPoll = async () => {
     try {
       const response = await api.getPublicPoll(slug);
@@ -37,6 +45,9 @@ export default function PublicPoll() {
     loadPoll();
   }, [slug]);
 
+  // Realtime: join the public room for this poll. When new responses arrive
+  // (and results are published) refresh the numbers; when the owner publishes
+  // results, re-fetch the poll so this page switches to the results view.
   useEffect(() => {
     socket.connect();
     socket.emit("poll:join_public", { slug });
@@ -54,6 +65,7 @@ export default function PublicPoll() {
       await loadPoll();
     });
 
+    // Cleanup on unmount: remove listeners and close the socket.
     return () => {
       socket.off("analytics:response_received", onRealtime);
       socket.off("analytics:question_updated", onRealtime);
@@ -62,6 +74,8 @@ export default function PublicPoll() {
     };
   }, [slug, poll?.isPublished]);
 
+  // Convert the answers map {questionId: optionId} into the array shape the
+  // backend expects, then POST it.
   const submit = async (e) => {
     e.preventDefault();
     setStatus({ submitted: false, message: "", error: "" });
@@ -88,6 +102,7 @@ export default function PublicPoll() {
     return <div className="min-h-screen bg-zinc-950 text-red-400 p-6">{status.error}</div>;
   }
 
+  // Published results view: no form, just the final numbers.
   if (poll?.isPublished && results) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white p-6">
@@ -112,6 +127,7 @@ export default function PublicPoll() {
     );
   }
 
+  // Auth-gated poll: logged-out visitors get a "login required" screen.
   if (poll.responseMode === "AUTHENTICATED" && !user) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white p-6 flex items-center justify-center">
@@ -133,6 +149,7 @@ export default function PublicPoll() {
           <p className="text-sm text-zinc-400 mt-2">Expires: {new Date(poll.expiresAt).toLocaleString()}</p>
         </div>
 
+        {/* One radio group per question; the required questions are marked * */}
         {poll.questions.map((question) => (
           <div key={question.questionId} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
             <h2 className="font-semibold">{question.text} {question.isRequired ? <span className="text-red-400">*</span> : null}</h2>

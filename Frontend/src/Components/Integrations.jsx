@@ -1,3 +1,5 @@
+// Marketing section showing tool integrations. Static list of demo "chips"
+// with a placeholder icon character and a brand color.
 const integrations = [
   { name: "Slack", icon: "◈", color: "bg-emerald-500" },
   { name: "Notion", icon: "◉", color: "bg-zinc-400" },

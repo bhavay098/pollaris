@@ -1,6 +1,4 @@
-// Public-facing controller: serves polls to respondents by slug, accepts
-// response submissions, and exposes published results. Unlike the owner
-// routes, these are accessed without logging in (optional auth).
+// Public-facing controller: serves polls to respondents by slug, accepts response submissions, and exposes published results. Unlike the owner routes, these are accessed without logging in (optional auth).
 
 import ApiError from "../../common/utils/api-error.js";
 import ApiResponse from "../../common/utils/api-response.js";

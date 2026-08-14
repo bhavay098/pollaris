@@ -1,3 +1,6 @@
+// Reusable brand logo block: colored square mark + product name (+ optional
+// tagline). `heading` renders the name as an <h1> instead of a <span>;
+// `compact` hides the tagline.
 export default function BrandMark({
   name,
   tagline,

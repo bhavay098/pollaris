@@ -1,3 +1,7 @@
+// Reusable marketing section header: small "eyebrow" label, big title, and
+// optional description. `align` can be "center" (default) or "left". The
+// title can be a plain string or an array of strings rendered on separate
+// lines.
 export default function SectionHeading({
   eyebrow,
   title,

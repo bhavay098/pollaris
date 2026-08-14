@@ -1,1 +1,3 @@
+/* Global stylesheet. Tailwind CSS v4 is imported here; utility classes used
+   in the JSX come from Tailwind, so there's no custom CSS in this project yet. */
 @import "tailwindcss";

@@ -1,3 +1,4 @@
+// Site footer: brand, placeholder legal/utility links, and copyright.
 export default function Footer() {
   return (
     <footer className="border-t border-white/6 py-12 px-6">

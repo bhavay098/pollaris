@@ -1,10 +1,15 @@
+// Hero (first) section of the home page: headline, call-to-action buttons,
+// and a mock "live poll" card on the right built from static demo data below.
 import ActionButton from "./ui/ActionButton.jsx";
+
+// Marketing stats shown under the CTAs.
 const stats = [
   { value: "14K+", label: "Live Responses" },
   { value: "3.8K+", label: "Polls Created" },
   { value: "99.9%", label: "Realtime Sync" },
 ];
 
+// Mock poll results rendered in the demo card.
 const pollOptions = [
   {
     label: "React",

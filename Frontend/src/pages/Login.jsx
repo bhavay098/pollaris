@@ -1,12 +1,17 @@
+// Login page (route "/login"). Email/password form plus a Google option.
+// On success it navigates to the dashboard.
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/auth-store";
 
 export default function Login() {
+  // Local form state; `error` shows any auth failure, `loading` disables
+  // buttons while a request is in flight.
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  // Auth actions come from the global store.
+  const { login, loginWithGoogle } = useAuthStore();
   const navigate = useNavigate();
 
   const onSubmit = async (e) => {
@@ -17,6 +22,7 @@ export default function Login() {
       await login(form);
       navigate("/dashboard");
     } catch (err) {
+      // Show the backend error message on the form.
       setError(err.message);
     } finally {
       setLoading(false);
@@ -27,6 +33,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
+      // OAuth redirects away from the page; if it fails we stay and show the error.
       await loginWithGoogle();
     } catch (err) {
       setError(err.message);

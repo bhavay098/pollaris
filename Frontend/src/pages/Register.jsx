@@ -1,12 +1,14 @@
+// Registration page (route "/register"). Same structure as Login: collects
+// name/email/password, creates the account, then goes to the dashboard.
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/auth-store";
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register, loginWithGoogle } = useAuth();
+  const { register, loginWithGoogle } = useAuthStore();
   const navigate = useNavigate();
 
   const onSubmit = async (e) => {

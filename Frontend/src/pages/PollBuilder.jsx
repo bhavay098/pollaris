@@ -1,7 +1,12 @@
+// Poll editor (routes "/dashboard/polls/new" and "/dashboard/polls/:pollId/edit").
+// The same component handles both modes: no :pollId in the URL = create mode,
+// :pollId present = edit mode (it pre-fills the form from the backend).
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../lib/api";
 
+// Factory that returns a fresh, empty question with two blank options.
+// IDs are generated with a timestamp + random suffix so each is unique.
 const blankQuestion = () => ({
   questionId: `q_${Date.now()}_${Math.random().toString(16).slice(2, 6)}`,
   text: "",
@@ -14,9 +19,11 @@ const blankQuestion = () => ({
 
 export default function PollBuilder() {
   const { pollId } = useParams();
+  // If the URL has a pollId, we're editing an existing poll.
   const isEdit = useMemo(() => Boolean(pollId), [pollId]);
   const navigate = useNavigate();
 
+  // Entire poll being edited, including all questions and their options.
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -27,6 +34,7 @@ export default function PollBuilder() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Edit mode: load the existing poll and populate the form once.
   useEffect(() => {
     if (!isEdit) return;
 
@@ -38,6 +46,7 @@ export default function PollBuilder() {
           title: poll.title,
           description: poll.description || "",
           responseMode: poll.responseMode,
+          // datetime-local inputs expect "YYYY-MM-DDTHH:MM"; slice drops seconds.
           expiresAt: new Date(poll.expiresAt).toISOString().slice(0, 16),
           questions: poll.questions,
         });
@@ -49,6 +58,11 @@ export default function PollBuilder() {
     loadPoll();
   }, [isEdit, pollId]);
 
+  // --- Immutable state updates for the question list ---
+  // Each helper copies the nested arrays before changing anything, so React
+  // sees a new object reference and re-renders correctly.
+
+  // Merge `patch` (e.g. { text }) into one question by index.
   const updateQuestion = (index, patch) => {
     setForm((prev) => {
       const questions = [...prev.questions];
@@ -57,6 +71,7 @@ export default function PollBuilder() {
     });
   };
 
+  // Change the text of one option inside a question.
   const updateOption = (qIndex, oIndex, text) => {
     setForm((prev) => {
       const questions = [...prev.questions];
@@ -71,6 +86,7 @@ export default function PollBuilder() {
     setForm((prev) => ({ ...prev, questions: [...prev.questions, blankQuestion()] }));
   };
 
+  // Never allow removing the last remaining question.
   const removeQuestion = (index) => {
     setForm((prev) => {
       if (prev.questions.length === 1) return prev;
@@ -87,6 +103,7 @@ export default function PollBuilder() {
     });
   };
 
+  // Keep at least 2 options per question.
   const removeOption = (qIndex, oIndex) => {
     setForm((prev) => {
       const questions = [...prev.questions];
@@ -99,6 +116,7 @@ export default function PollBuilder() {
     });
   };
 
+  // Save: POST for new polls, PATCH for edits, then return to the dashboard.
   const submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -139,6 +157,7 @@ export default function PollBuilder() {
             </div>
           </div>
 
+          {/* Render one editable card per question, with its options */}
           {form.questions.map((question, qIndex) => (
             <div key={question.questionId} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
               <div className="flex justify-between items-center">

@@ -1,3 +1,5 @@
+// Reusable rounded "card" container. The `variant` prop picks border/background
+// styling from the map below.
 const variants = {
   default: "border-white/8 bg-zinc-800/50",
   soft: "border-white/8 bg-white/4 backdrop-blur-xl",

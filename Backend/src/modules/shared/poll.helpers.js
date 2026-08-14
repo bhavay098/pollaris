@@ -15,8 +15,7 @@ const hashRespondent = (req) => {
 };
 
 // Checks a poll can still accept responses. Returns an error descriptor
-// (ok: false + HTTP code/message) instead of throwing, so the caller
-// decides how to respond.
+// (ok: false + HTTP code/message) instead of throwing, so the caller decides how to respond.
 const ensurePollActive = (poll) => {
   if (!poll) {
     return { ok: false, code: 404, message: "Poll not found" };

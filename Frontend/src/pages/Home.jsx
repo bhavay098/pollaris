@@ -1,5 +1,7 @@
+// Public landing page (route "/"). Assembles all the marketing section
+// components in order, plus a small app-link banner at the bottom.
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/auth-store";
 import Navbar from "../Components/Navbar.jsx";
 import Hero from "../Components/Hero.jsx";
 import Features from "../Components/Features.jsx";
@@ -10,7 +12,9 @@ import CtaBanner from "../Components/CtaBanner.jsx";
 import Footer from "../Components/Footer.jsx";
 
 export default function Home() {
-  const { user } = useAuth();
+  // Check if someone is already logged in so we can show "Go to Dashboard"
+  // instead of Login/Register buttons.
+  const { user } = useAuthStore();
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-white font-sans">
@@ -29,6 +33,8 @@ export default function Home() {
               Build and manage your polls from the app dashboard.
             </p>
             <div className="flex gap-2">
+              {/* Logged-in users get one button to the dashboard; logged-out
+                  users see Login + Register instead */}
               {user ? (
                 <Link
                   to="/dashboard"

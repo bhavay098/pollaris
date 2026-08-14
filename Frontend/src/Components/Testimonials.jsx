@@ -1,3 +1,5 @@
+// Marketing section with customer quotes. Static demo data; stars/avatar
+// colors are just cosmetic.
 const testimonials = [
   {
     name: "Aisha Patel",

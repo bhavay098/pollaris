@@ -1,3 +1,5 @@
+// Fixed top navigation bar for the marketing pages. Shows the brand, anchor
+// links, and Login / Get Started buttons.
 import ActionButton from "./ui/ActionButton.jsx";
 
 export default function Navbar() {
@@ -23,6 +25,7 @@ export default function Navbar() {
                 </p>
               </div>
             </div>
+            {/* Desktop-only nav links (hidden below lg breakpoint) */}
             <nav className="hidden lg:flex items-center gap-1">
               {["Features", "How It Works", "Pricing", "About"].map((item) => (
                 <a

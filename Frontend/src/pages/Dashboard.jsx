@@ -1,14 +1,17 @@
+// Authenticated dashboard (route "/dashboard"): lists the current user's polls
+// with links to edit, view analytics, open the public link, or create a new poll.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/auth-store";
 
 export default function Dashboard() {
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthStore();
 
+  // Fetch the logged-in user's polls from the backend.
   const loadPolls = async () => {
     try {
       const response = await api.getMyPolls();
@@ -20,6 +23,7 @@ export default function Dashboard() {
     }
   };
 
+  // Load polls once when the page mounts.
   useEffect(() => {
     loadPolls();
   }, []);
@@ -41,6 +45,7 @@ export default function Dashboard() {
         {loading ? <p>Loading polls...</p> : null}
         {error ? <p className="text-red-400">{error}</p> : null}
 
+        {/* Poll list; each card shows the title/slug and action links */}
         <div className="grid gap-4">
           {polls.map((poll) => (
             <div key={poll.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
@@ -61,6 +66,7 @@ export default function Dashboard() {
               </div>
             </div>
           ))}
+          {/* Empty state, shown only after loading finishes with no polls */}
           {!loading && polls.length === 0 ? <p className="text-zinc-400">No polls yet. Create your first poll.</p> : null}
         </div>
       </div>

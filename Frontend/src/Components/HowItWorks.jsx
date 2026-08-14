@@ -1,3 +1,5 @@
+// Marketing section walking visitors through the four-step "how it works"
+// flow. The `color` field maps to Tailwind color classes via colorMap below.
 const steps = [
   {
     number: "01",
@@ -29,6 +31,7 @@ const steps = [
   },
 ];
 
+// Maps a step's color name to the Tailwind classes used for its dot and number.
 const colorMap = {
   teal: { dot: "bg-teal-400", num: "text-teal-400" },
   sky: { dot: "bg-sky-400", num: "text-sky-400" },

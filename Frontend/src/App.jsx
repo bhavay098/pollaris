@@ -1,3 +1,5 @@
+// App routes. Every URL the app can show is declared here, mapped to a page
+// component. Routes wrapped in <ProtectedRoute> require a logged-in user.
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -12,9 +14,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public marketing page */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Authenticated (login required): poll management */}
         <Route
           path="/dashboard"
           element={
@@ -23,6 +28,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Same PollBuilder page handles both creating and editing: the
+            :pollId URL param (or its absence) decides which mode it's in */}
         <Route
           path="/dashboard/polls/new"
           element={
@@ -47,7 +54,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Public shareable poll: anyone can visit /p/<slug> without logging in */}
         <Route path="/p/:slug" element={<PublicPoll />} />
+
+        {/* Any unknown URL redirects back to the home page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
