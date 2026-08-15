@@ -13,21 +13,21 @@ const stats = [
 // Mock poll results rendered in the demo card.
 const pollOptions = [
   {
-    label: "React",
-    value: "56%",
-    width: "56%",
+    label: "Product roadmap",
+    value: "48%",
+    width: "48%",
     color: "bg-teal-500",
   },
   {
-    label: "Vue",
-    value: "27%",
-    width: "27%",
+    label: "Audience analytics",
+    value: "31%",
+    width: "31%",
     color: "bg-sky-500",
   },
   {
-    label: "Angular",
-    value: "17%",
-    width: "17%",
+    label: "Public polls",
+    value: "21%",
+    width: "21%",
     color: "bg-indigo-500",
   },
 ];
@@ -97,11 +97,11 @@ export default function Hero() {
                   Live Poll
                 </p>
                 <h3 className="mt-3 text-2xl font-bold leading-[1.08]">
-                  Future of Polling
+                  What should we ship next?
                 </h3>
               </div>
               <div className="w-16 h-16 rounded-full border border-teal-400/30 flex items-center justify-center text-teal-300 font-semibold text-lg shadow-[0_0_30px_rgba(20,184,166,0.2)]">
-                92%
+                74%
               </div>
             </div>
             <div className="relative px-7 py-7 space-y-6">
@@ -119,20 +119,20 @@ export default function Hero() {
               <div className="grid grid-cols-2 gap-4 pt-3">
                 <div className="rounded-2xl border border-white/8 bg-white/3 p-5">
                   <p className="text-[10px] uppercase tracking-[0.12em] text-zinc-500 font-medium">
-                    Responses
+                    Votes cast
                   </p>
                   <h4 className="mt-2.5 text-3xl font-bold">1,248</h4>
                   <div className="mt-2 text-teal-400 text-xs font-medium">
-                    +18 live users
+                    +18 in the last minute
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/3 p-5">
                   <p className="text-[10px] uppercase tracking-[0.12em] text-zinc-500 font-medium">
-                    Completion
+                    Engagement
                   </p>
                   <h4 className="mt-2.5 text-3xl font-bold">94%</h4>
                   <div className="mt-2 text-sky-300 text-xs font-medium">
-                    Excellent engagement
+                    Strong signal quality
                   </div>
                 </div>
               </div>

@@ -12,7 +12,7 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [publishingId, setPublishingId] = useState(null);
   const [sharingId, setSharingId] = useState(null);
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
 
   // Load polls once when the page mounts.
   useEffect(() => {
@@ -82,7 +82,6 @@ export default function Dashboard() {
         </div>
         <div className="page-actions">
           <Link className="btn btn-primary" to="/dashboard/polls/new">Create poll</Link>
-          <button className="btn btn-quiet" onClick={logout}>Log out</button>
         </div>
       </div>
 
