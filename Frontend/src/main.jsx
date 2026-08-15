@@ -1,5 +1,8 @@
 // React app entry point. Renders the whole app into the <div id="root">
 // element in index.html.
+
+import { Agentation } from "agentation";
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
@@ -14,6 +17,7 @@ createRoot(document.getElementById("root")).render(
     <ThemeProvider>
       <AuthSessionSync />
       <App />
+      {process.env.NODE_ENV === "development" && <Agentation />}
     </ThemeProvider>
   </StrictMode>,
 );

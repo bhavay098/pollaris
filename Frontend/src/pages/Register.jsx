@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
+import GoogleIcon from "../Components/ui/GoogleIcon.jsx";
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -67,9 +68,9 @@ export default function Register() {
               <input id="register-password" autoComplete="new-password" placeholder="At least 8 characters" type="password" minLength={8} required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
             </div>
             {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
-            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Creating account..." : "Create account"}</button>
+            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Creating account…" : "Create account"}</button>
             <div className="auth-divider">or continue with</div>
-            <button type="button" disabled={loading} onClick={onGoogleSignup} className="btn btn-secondary">Google</button>
+            <button type="button" disabled={loading} onClick={onGoogleSignup} className="btn btn-secondary"><GoogleIcon /> Continue with Google</button>
           </div>
           <p className="form-footer">Have an account? <Link className="link-accent" to="/login">Log in</Link></p>
         </form>

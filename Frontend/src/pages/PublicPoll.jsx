@@ -102,7 +102,7 @@ export default function PublicPoll() {
   };
 
   if (loading) {
-    return <AppShell><div className="panel muted">Loading poll...</div></AppShell>;
+    return <AppShell><div className="panel muted">Loading poll…</div></AppShell>;
   }
 
   if (status.error && !poll) {

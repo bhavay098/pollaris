@@ -93,7 +93,7 @@ export default function Dashboard() {
         <div className="stat-card"><span className="stat-label">Mode</span><strong className="stat-value accent">Live</strong></div>
       </div>
 
-      {loading ? <div className="panel muted">Syncing your poll space...</div> : null}
+      {loading ? <div className="panel muted">Syncing your poll space…</div> : null}
       {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
 
       {!loading && polls.length > 0 ? (
@@ -115,12 +115,12 @@ export default function Dashboard() {
                 <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/analytics`}>View analytics</Link>
                 {!poll.isPublished ? (
                   <button className="btn btn-primary" type="button" disabled={publishingId === poll.id} onClick={() => void publishPoll(poll.id)}>
-                    {publishingId === poll.id ? "Publishing..." : "Publish poll"}
+                    {publishingId === poll.id ? "Publishing…" : "Publish poll"}
                   </button>
                 ) : (
                   <>
                     <button className="btn btn-primary" type="button" disabled={sharingId === poll.id} onClick={() => void sharePoll(poll)}>
-                      {sharingId === poll.id ? "Sharing..." : "Share poll"}
+                      {sharingId === poll.id ? "Sharing…" : "Share poll"}
                     </button>
                     <Link className="btn btn-quiet" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open public link</Link>
                   </>

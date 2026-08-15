@@ -39,11 +39,11 @@ export default function Hero() {
         <div>
           <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-teal-400/20 bg-teal-400/[0.07]">
             <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-            <span className="text-xs text-teal-300 tracking-[0.18em] uppercase font-medium">
+            <span className="text-xs text-teal-300 tracking-[0.12em] uppercase font-medium">
               WebSocket Powered Live Polling
             </span>
           </div>
-          <h2 className="mt-7 text-[4.5rem] md:text-[5.5rem] font-black leading-[0.9] tracking-[-0.04em]">
+          <h2 className="home-hero-title mt-7 font-bold leading-[0.98] tracking-[-0.03em]">
             Polling
             <br />
             <span className="text-teal-400">
@@ -71,10 +71,10 @@ export default function Hero() {
                 key={item.label}
                 className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-xl p-5"
               >
-                <div className="text-2xl font-black text-white">
+                <div className="text-2xl font-bold text-white">
                   {item.value}
                 </div>
-                <div className="mt-1.5 text-xs text-zinc-500 font-medium tracking-wide">
+                <div className="mt-1.5 text-xs text-zinc-500 font-medium tracking-[0.04em]">
                   {item.label}
                 </div>
               </div>
@@ -82,7 +82,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="relative flex justify-center">
+        <div className="home-hero-visual relative flex justify-center">
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-130 h-130 rounded-full border border-teal-500/10" />
           </div>
@@ -93,16 +93,16 @@ export default function Hero() {
             <div className="absolute inset-0 bg-white/2" />
             <div className="relative border-b border-white/[0.07] px-7 py-6 flex items-center justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-medium">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 font-medium">
                   Live Poll
                 </p>
-                <h3 className="mt-3 text-2xl font-black leading-tight">
+                <h3 className="mt-3 text-2xl font-bold leading-[1.08]">
                   Future of
                   <br />
                   Web Development
                 </h3>
               </div>
-              <div className="w-16 h-16 rounded-full border border-teal-400/30 flex items-center justify-center text-teal-300 font-black text-lg shadow-[0_0_30px_rgba(20,184,166,0.2)]">
+              <div className="w-16 h-16 rounded-full border border-teal-400/30 flex items-center justify-center text-teal-300 font-semibold text-lg shadow-[0_0_30px_rgba(20,184,166,0.2)]">
                 92%
               </div>
             </div>
@@ -120,19 +120,19 @@ export default function Hero() {
               ))}
               <div className="grid grid-cols-2 gap-4 pt-3">
                 <div className="rounded-2xl border border-white/8 bg-white/3 p-5">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-medium">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-zinc-500 font-medium">
                     Responses
                   </p>
-                  <h4 className="mt-2.5 text-3xl font-black">1,248</h4>
+                  <h4 className="mt-2.5 text-3xl font-bold">1,248</h4>
                   <div className="mt-2 text-teal-400 text-xs font-medium">
                     +18 live users
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/3 p-5">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-medium">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-zinc-500 font-medium">
                     Completion
                   </p>
-                  <h4 className="mt-2.5 text-3xl font-black">94%</h4>
+                  <h4 className="mt-2.5 text-3xl font-bold">94%</h4>
                   <div className="mt-2 text-sky-300 text-xs font-medium">
                     Excellent engagement
                   </div>

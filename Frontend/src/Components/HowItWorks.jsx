@@ -44,10 +44,10 @@ export default function HowItWorks() {
     <section className="max-w-6xl mx-auto px-6 pb-28">
       <div className="h-px bg-white/10 mb-24" />
       <div className="text-center max-w-3xl mx-auto mb-20">
-        <p className="text-xs uppercase tracking-[0.35em] text-cyan-400 font-semibold">
+        <p className="text-xs uppercase tracking-[0.12em] text-cyan-400 font-semibold">
           How It Works
         </p>
-        <h3 className="mt-5 text-4xl md:text-5xl font-black tracking-tight leading-tight">
+        <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
           From idea to live poll
           <br />
           in under 60 seconds.
@@ -67,12 +67,12 @@ export default function HowItWorks() {
                   className={`relative z-10 w-5 h-5 rounded-full ${c.dot} mb-6 hidden lg:block ring-4 ring-[#030b14]`}
                 />
                 <span
-                  className={`hidden lg:block text-4xl font-black ${c.num} opacity-40 mb-2 tracking-[-0.04em]`}
+                  className={`hidden lg:block text-4xl font-bold ${c.num} opacity-40 mb-2 tracking-[-0.025em]`}
                 >
                   {step.number}
                 </span>
                 <span
-                  className={`lg:hidden text-sm font-black ${c.num} opacity-60 mb-2`}
+                  className={`lg:hidden text-sm font-bold ${c.num} opacity-60 mb-2`}
                 >
                   {step.number}
                 </span>

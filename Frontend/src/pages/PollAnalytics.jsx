@@ -121,7 +121,7 @@ export default function PollAnalytics() {
           <div className="stat-card"><span className="stat-label">Authenticated</span><strong className="stat-value">{summary.participantBreakdown.authenticated}</strong></div>
           <div className="stat-card"><span className="stat-label">Publication</span><strong className={`stat-value ${summary.isPublished ? "success" : "accent"}`}>{summary.isPublished ? "Live" : "Draft"}</strong></div>
         </div>
-      ) : <div className="panel muted">Loading analytics...</div>}
+      ) : <div className="panel muted">Loading analytics…</div>}
 
       <div className="analytics-stack">
         <section className="panel" aria-labelledby="question-counts-heading">

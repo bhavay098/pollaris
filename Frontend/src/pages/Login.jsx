@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
+import GoogleIcon from "../Components/ui/GoogleIcon.jsx";
 
 export default function Login() {
   // Local form state; `error` shows any auth failure, `loading` disables
@@ -57,7 +58,7 @@ export default function Login() {
 
         <form onSubmit={onSubmit} className="auth-card">
           <span className="eyebrow">Welcome back</span>
-          <h2>Log in to PulsePoll</h2>
+          <h2>Log in to Pollaris</h2>
           <div className="form-stack">
             <div className="field">
               <label htmlFor="login-email">Email</label>
@@ -68,9 +69,9 @@ export default function Login() {
               <input id="login-password" placeholder="Your password" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
             </div>
             {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
-            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Logging in..." : "Log in"}</button>
+            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Logging in…" : "Log in"}</button>
             <div className="auth-divider">or continue with</div>
-            <button type="button" disabled={loading} onClick={onGoogleLogin} className="btn btn-secondary">Google</button>
+            <button type="button" disabled={loading} onClick={onGoogleLogin} className="btn btn-secondary"><GoogleIcon /> Continue with Google</button>
           </div>
           <p className="form-footer">No account? <Link className="link-accent" to="/register">Create one</Link></p>
         </form>

@@ -7,7 +7,7 @@ const testimonials = [
     avatar: "AP",
     avatarColor: "bg-teal-500",
     quote:
-      "PulsePoll transformed how we run sprint retrospectives. The live results made discussions so much more energetic and data-driven.",
+      "Pollaris transformed how we run sprint retrospectives. The live results made discussions so much more energetic and data-driven.",
     stars: 5,
   },
   {
@@ -16,7 +16,7 @@ const testimonials = [
     avatar: "MC",
     avatarColor: "bg-sky-500",
     quote:
-      "We run weekly all-hands with 400+ people. PulsePoll's WebSocket sync means zero lag - everyone sees the same results at the same time.",
+      "We run weekly all-hands with 400+ people. Pollaris' WebSocket sync means zero lag - everyone sees the same results at the same time.",
     stars: 5,
   },
   {
@@ -35,10 +35,10 @@ export default function Testimonials() {
     <section className="max-w-6xl mx-auto px-6 pb-28">
       <div className="h-px bg-white/10 mb-24" />
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <p className="text-xs uppercase tracking-[0.35em] text-sky-400 font-semibold">
+        <p className="text-xs uppercase tracking-[0.12em] text-sky-400 font-semibold">
           Testimonials
         </p>
-        <h3 className="mt-5 text-4xl md:text-5xl font-black tracking-tight leading-tight">
+        <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
           Loved by teams
           <br />
           at leading companies.
@@ -62,7 +62,7 @@ export default function Testimonials() {
               </p>
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-10 h-10 rounded-2xl ${t.avatarColor} flex items-center justify-center text-xs font-black text-white`}
+                  className={`w-10 h-10 rounded-2xl ${t.avatarColor} flex items-center justify-center text-xs font-semibold text-white`}
                 >
                   {t.avatar}
                 </div>

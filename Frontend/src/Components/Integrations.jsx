@@ -15,14 +15,14 @@ export default function Integrations() {
       <div className="h-px bg-white/10 mb-24" />
       <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-zinc-800/50 p-12">
         <div className="relative text-center mb-12">
-          <p className="text-xs uppercase tracking-[0.35em] text-teal-400 font-semibold">
+          <p className="text-xs uppercase tracking-[0.12em] text-teal-400 font-semibold">
             Integrations
           </p>
-          <h3 className="mt-5 text-3xl md:text-4xl font-black tracking-tight">
+          <h3 className="mt-5 text-3xl md:text-4xl font-bold tracking-[-0.025em] leading-[1.08]">
             Works where your team works.
           </h3>
           <p className="mt-4 text-zinc-400 text-sm">
-            Connect PulsePoll with the tools you already use.
+            Connect Pollaris with the tools you already use.
           </p>
         </div>
         <div className="relative flex flex-wrap justify-center gap-4">
@@ -32,7 +32,7 @@ export default function Integrations() {
             >
               <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-white/8 bg-white/4 backdrop-blur-xl cursor-pointer hover:border-white/15">
                 <div
-                  className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center text-sm font-black text-white`}
+                  className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center text-sm font-semibold text-white`}
                 >
                   {item.icon}
                 </div>

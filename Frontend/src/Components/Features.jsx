@@ -36,10 +36,10 @@ export default function Features() {
     <section className="max-w-7xl mx-auto px-6 pb-24">
       <div className="h-px bg-white/10 mb-24" />
       <div className="text-center max-w-3xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.35em] text-teal-400 font-semibold">
+        <p className="text-xs uppercase tracking-[0.12em] text-teal-400 font-semibold">
           Platform Features
         </p>
-        <h3 className="mt-5 text-4xl md:text-5xl font-black tracking-tight leading-tight">
+        <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
           Designed for modern
           <br />
           realtime engagement.
@@ -56,7 +56,7 @@ export default function Features() {
           >
             <div className="group rounded-3xl border border-white/8 bg-zinc-800/50 p-7">
               <div
-                className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center text-lg font-black text-white`}
+                className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center text-lg font-semibold text-white`}
               >
                 {feature.icon}
               </div>

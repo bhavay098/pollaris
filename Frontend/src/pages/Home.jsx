@@ -17,10 +17,11 @@ export default function Home() {
   const { user } = useAuthStore();
 
   return (
-    <div className="home-shell relative min-h-screen bg-zinc-950 text-white font-sans">
+    <div className="home-shell relative min-h-screen bg-zinc-950 text-white">
       <Navbar />
 
-      <main className="relative z-10">
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <main id="main-content" className="relative z-10">
         <Hero />
         <Features />
         <HowItWorks />

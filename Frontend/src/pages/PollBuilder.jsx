@@ -221,7 +221,7 @@ export default function PollBuilder() {
         {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
         <div className="button-row">
           <button type="button" className="btn btn-secondary" onClick={addQuestion}>+ Add question</button>
-          <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Saving..." : isEdit ? "Save changes" : "Create poll"}</button>
+          <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Saving…" : isEdit ? "Save changes" : "Create poll"}</button>
         </div>
       </form>
     </AppShell>
