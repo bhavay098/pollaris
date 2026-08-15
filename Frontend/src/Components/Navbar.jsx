@@ -3,6 +3,7 @@
 import ActionButton from "./ui/ActionButton.jsx";
 import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
+import { useAuthStore } from "../store/auth-store";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -11,6 +12,11 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  // Signed-in users get sent straight to the dashboard instead of the
+  // login/register pages.
+  const { user } = useAuthStore();
+  const authTarget = user ? "/dashboard" : "/login";
+
   return (
     <header className="fixed top-0 left-0 w-full z-50 px-5 pt-4">
       <div className="max-w-7xl mx-auto">
@@ -49,7 +55,7 @@ export default function Navbar() {
               <ThemeToggle />
               <ActionButton
                 as={Link}
-                to="/login"
+                to={authTarget}
                 variant="subtle"
                 className="home-nav-login px-4 py-2 rounded-xl text-sm font-medium"
               >
@@ -57,7 +63,7 @@ export default function Navbar() {
               </ActionButton>
               <ActionButton
                 as={Link}
-                to="/register"
+                to={authTarget}
                 variant="accent"
                 className="home-nav-get-started px-5 py-2 rounded-xl text-sm font-semibold"
               >

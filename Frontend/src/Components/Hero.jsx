@@ -2,6 +2,7 @@
 // and a mock "live poll" card on the right built from static demo data below.
 import ActionButton from "./ui/ActionButton.jsx";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../store/auth-store";
 
 // Marketing stats shown under the CTAs.
 const stats = [
@@ -33,6 +34,10 @@ const pollOptions = [
 ];
 
 export default function Hero() {
+  // Signed-in users land on the dashboard instead of the auth pages.
+  const { user } = useAuthStore();
+  const authTarget = user ? "/dashboard" : "/login";
+
   return (
     <section className="max-w-7xl mx-auto px-6 pt-36 pb-24">
       <div className="grid lg:grid-cols-2 gap-20 items-center">
@@ -58,10 +63,10 @@ export default function Hero() {
             modern collaborative platform.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <ActionButton as={Link} to="/register" className="px-7 py-3.5">
+            <ActionButton as={Link} to={authTarget} className="px-7 py-3.5">
               Launch Poll
             </ActionButton>
-            <ActionButton as={Link} to="/login" variant="secondary" className="px-7 py-3.5">
+            <ActionButton as={Link} to={authTarget} variant="secondary" className="px-7 py-3.5">
               Login
             </ActionButton>
           </div>

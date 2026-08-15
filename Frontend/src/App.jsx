@@ -9,6 +9,7 @@ import PollBuilder from "./pages/PollBuilder";
 import PollAnalytics from "./pages/PollAnalytics";
 import PublicPoll from "./pages/PublicPoll";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import GuestRoute from "./Components/GuestRoute";
 import AuthTimeoutManager from "./Components/AuthTimeoutManager";
 
 function App() {
@@ -18,8 +19,9 @@ function App() {
       <Routes>
         {/* Public marketing page */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Auth pages: signed-in users bounce straight to the dashboard */}
+        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
 
         {/* Authenticated (login required): poll management */}
         <Route

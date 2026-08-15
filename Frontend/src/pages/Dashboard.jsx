@@ -112,18 +112,15 @@ export default function Dashboard() {
               <div className="card-actions" style={{ marginTop: "20px" }}>
                 <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/edit`}>Edit poll</Link>
                 <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/analytics`}>View analytics</Link>
+                <button className="btn btn-secondary" type="button" disabled={sharingId === poll.id} onClick={() => void sharePoll(poll)}>
+                  {sharingId === poll.id ? "Sharing…" : "Share poll"}
+                </button>
+                <Link className="btn btn-quiet" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open public link</Link>
                 {!poll.isPublished ? (
                   <button className="btn btn-primary" type="button" disabled={publishingId === poll.id} onClick={() => void publishPoll(poll.id)}>
-                    {publishingId === poll.id ? "Publishing…" : "Publish poll"}
+                    {publishingId === poll.id ? "Publishing…" : "Publish results"}
                   </button>
-                ) : (
-                  <>
-                    <button className="btn btn-primary" type="button" disabled={sharingId === poll.id} onClick={() => void sharePoll(poll)}>
-                      {sharingId === poll.id ? "Sharing…" : "Share poll"}
-                    </button>
-                    <Link className="btn btn-quiet" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open public link</Link>
-                  </>
-                )}
+                ) : null}
               </div>
             </article>
           ))}

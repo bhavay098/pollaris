@@ -54,9 +54,11 @@ const validateSubmission = (poll, answers = []) => {
 };
 
 // GET /api/public/polls/:slug — fetch a poll for display to respondents.
+// Any existing poll is reachable by slug so respondents can answer it; the
+// `isPublished` flag only controls whether results are shown (not access).
 const getPublicPollBySlug = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ slug: req.params.slug, isPublished: true }).lean();
+    const poll = await Poll.findOne({ slug: req.params.slug }).lean();
 
     if (!poll) {
       throw ApiError.notFound("Poll not found");
@@ -79,7 +81,6 @@ const submitPublicResponse = async (req, res, next) => {
   try {
     const existingPoll = await Poll.findOne({
       slug: req.params.slug,
-      isPublished: true,
     });
 
     if (!existingPoll) {
@@ -90,7 +91,6 @@ const submitPublicResponse = async (req, res, next) => {
       const poll = await Poll.findOne({
         _id: existingPoll._id,
         slug: req.params.slug,
-        isPublished: true,
       });
 
       if (!poll) {

@@ -1,8 +1,13 @@
 // Bottom call-to-action banner on the home page, prompting sign-up/login.
 import ActionButton from "./ui/ActionButton.jsx";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../store/auth-store";
 
 export default function CtaBanner() {
+  // Signed-in users get sent straight to the dashboard.
+  const { user } = useAuthStore();
+  const authTarget = user ? "/dashboard" : "/login";
+
   return (
     <section className="max-w-6xl mx-auto px-6 pb-24">
       <div className="relative overflow-hidden rounded-3xl border border-teal-400/20 bg-zinc-900 p-14 text-center">
@@ -25,10 +30,10 @@ export default function CtaBanner() {
             faster, and more engaging polls.
           </p>
           <div className="mt-10 flex flex-wrap gap-4 justify-center">
-            <ActionButton as={Link} to="/register" variant="accent" className="px-8 py-4 text-base font-semibold">
+            <ActionButton as={Link} to={authTarget} variant="accent" className="px-8 py-4 text-base font-semibold">
               Create Your First Poll — Free
             </ActionButton>
-            <ActionButton as={Link} to="/login" variant="secondary" className="px-8 py-4 text-base">
+            <ActionButton as={Link} to={authTarget} variant="secondary" className="px-8 py-4 text-base">
               Login
             </ActionButton>
           </div>
