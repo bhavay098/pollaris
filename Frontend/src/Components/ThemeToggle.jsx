@@ -30,7 +30,6 @@ export default function ThemeToggle() {
       title={`Switch to ${nextTheme} mode`}
     >
       <span className="theme-toggle-icon">{theme === "dark" ? <SunIcon /> : <MoonIcon />}</span>
-      <span className="theme-toggle-label">{theme === "dark" ? "Light" : "Dark"}</span>
     </button>
   );
 }

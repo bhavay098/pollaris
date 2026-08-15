@@ -2,6 +2,7 @@
 // links, and Login / Get Started buttons.
 import ActionButton from "./ui/ActionButton.jsx";
 import { Link } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 export default function Navbar() {
   return (
@@ -39,6 +40,7 @@ export default function Navbar() {
               ))}
             </nav>
             <div className="flex items-center gap-2.5">
+              <ThemeToggle />
               <ActionButton
                 as={Link}
                 to="/login"

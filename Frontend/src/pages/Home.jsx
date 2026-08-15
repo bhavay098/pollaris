@@ -17,7 +17,7 @@ export default function Home() {
   const { user } = useAuthStore();
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-white font-sans">
+    <div className="home-shell relative min-h-screen bg-zinc-950 text-white font-sans">
       <Navbar />
 
       <main className="relative z-10">

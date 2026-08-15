@@ -85,12 +85,11 @@ html[data-theme="light"] .app-shell {
 .brand-caption { margin-top: 2px; font-size: 8px; letter-spacing: 0.16em; }
 .app-topbar-tools { display: flex; align-items: center; gap: 16px; }
 
-.theme-toggle { display: inline-flex; min-height: 42px; align-items: center; gap: 8px; padding: 0 13px; border: 1px solid var(--app-border); border-radius: 13px; background: color-mix(in srgb, var(--app-surface) 88%, transparent); color: var(--app-muted); cursor: pointer; transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, background 180ms ease; }
+.theme-toggle { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border: 1px solid var(--app-border); border-radius: 13px; background: color-mix(in srgb, var(--app-surface) 88%, transparent); color: var(--app-muted); cursor: pointer; transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, background 180ms ease; }
 .theme-toggle:hover { border-color: var(--app-border-strong); background: var(--app-surface-raised); color: var(--app-text); }
 .theme-toggle:active { transform: scale(0.97); }
 .theme-toggle:focus-visible, .btn:focus-visible, .app-brand:focus-visible, .app-main a:focus-visible, .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--app-primary) 55%, transparent); outline-offset: 3px; }
 .theme-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-.theme-toggle-label { font-size: 12px; font-weight: 700; }
 
 .app-main { position: relative; padding: 58px 0 80px; }
 .page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
@@ -190,6 +189,73 @@ html[data-theme="light"] .app-shell {
 .public-hero .page-title { max-width: 850px; }
 .public-meta { display: flex; flex-wrap: wrap; gap: 9px 16px; margin-top: 20px; color: var(--app-subtle); font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 11px; }
 
+/* The homepage keeps its original glass treatment, but now follows the same
+   persisted theme as the app pages. These overrides are scoped to home so
+   its existing dark composition remains intact. */
+.home-shell {
+  --app-surface: rgba(255, 255, 255, 0.07);
+  --app-surface-raised: rgba(255, 255, 255, 0.12);
+  --app-text: #ffffff;
+  --app-muted: #a1aab8;
+  --app-border: rgba(255, 255, 255, 0.14);
+  --app-border-strong: rgba(255, 255, 255, 0.25);
+  --app-primary: #63dbc7;
+  --home-bg: #090d16;
+  position: relative;
+  background: var(--home-bg) !important;
+  color: var(--app-text);
+}
+
+html[data-theme="light"] .home-shell {
+  --app-surface: rgba(255, 255, 255, 0.72);
+  --app-surface-raised: rgba(255, 255, 255, 0.94);
+  --app-text: #102a32;
+  --app-muted: #5a7077;
+  --app-border: rgba(31, 78, 82, 0.16);
+  --app-border-strong: rgba(31, 78, 82, 0.3);
+  --app-primary: #078f7d;
+  --home-bg: #edf4f1;
+}
+
+html[data-theme="light"] .home-shell .text-white { color: var(--app-text) !important; }
+html[data-theme="light"] .home-shell .text-zinc-200 { color: #24434b !important; }
+html[data-theme="light"] .home-shell .text-zinc-300 { color: #385760 !important; }
+html[data-theme="light"] .home-shell .text-zinc-400 { color: #5a7077 !important; }
+html[data-theme="light"] .home-shell .text-zinc-500 { color: #71868a !important; }
+html[data-theme="light"] .home-shell .text-zinc-600 { color: #71868a !important; }
+html[data-theme="light"] .home-shell .text-zinc-700 { color: #667c81 !important; }
+html[data-theme="light"] .home-shell .text-teal-300,
+html[data-theme="light"] .home-shell .text-teal-400 { color: #087f73 !important; }
+html[data-theme="light"] .home-shell .text-cyan-400 { color: #087b82 !important; }
+html[data-theme="light"] .home-shell .text-sky-300,
+html[data-theme="light"] .home-shell .text-sky-400 { color: #17689b !important; }
+
+html[data-theme="light"] .home-shell [class~="bg-zinc-800/50"],
+html[data-theme="light"] .home-shell [class~="bg-zinc-900"] { background: rgba(255, 255, 255, 0.72) !important; }
+html[data-theme="light"] .home-shell [class~="bg-white/2"],
+html[data-theme="light"] .home-shell [class~="bg-white/3"],
+html[data-theme="light"] .home-shell [class~="bg-white/4"],
+html[data-theme="light"] .home-shell [class~="bg-white/5"] { background: rgba(255, 255, 255, 0.62) !important; }
+html[data-theme="light"] .home-shell [class~="bg-white/6"],
+html[data-theme="light"] .home-shell [class~="bg-white/8"] { background: rgba(31, 78, 82, 0.06) !important; }
+html[data-theme="light"] .home-shell [class~="border-white/6"],
+html[data-theme="light"] .home-shell [class~="border-white/8"],
+html[data-theme="light"] .home-shell [class~="border-white/9"],
+html[data-theme="light"] .home-shell [class~="border-white/10"],
+html[data-theme="light"] .home-shell [class~="border-white/20"] { border-color: var(--app-border) !important; }
+html[data-theme="light"] .home-shell [class~="ring-[#030b14]"] { --tw-ring-color: #edf4f1 !important; }
+
+/* Keep white lettering legible on saturated action and avatar backgrounds. */
+html[data-theme="light"] .home-shell .bg-teal-500.text-white,
+html[data-theme="light"] .home-shell .bg-teal-500 .text-white,
+html[data-theme="light"] .home-shell .bg-sky-500 .text-white,
+html[data-theme="light"] .home-shell .bg-indigo-500 .text-white,
+html[data-theme="light"] .home-shell .bg-cyan-500 .text-white,
+html[data-theme="light"] .home-shell .bg-emerald-500 .text-white,
+html[data-theme="light"] .home-shell .bg-pink-500 .text-white,
+html[data-theme="light"] .home-shell .bg-violet-500 .text-white,
+html[data-theme="light"] .home-shell .bg-blue-500 .text-white { color: #ffffff !important; }
+
 @media (max-width: 800px) {
   .app-topbar, .app-main { width: min(100% - 28px, 680px); }
   .workspace-label { display: none; }
@@ -203,8 +269,6 @@ html[data-theme="light"] .app-shell {
 
 @media (max-width: 520px) {
   .app-topbar { padding-top: 18px; }
-  .theme-toggle { width: 42px; justify-content: center; padding: 0; }
-  .theme-toggle-label { display: none; }
   .panel, .poll-card, .question-card { padding: 17px; }
   .builder-details .split-fields, .result-row { grid-template-columns: 1fr; }
   .result-value { text-align: left; }
