@@ -2,6 +2,7 @@
 // the user is logged in; otherwise redirects to /login.
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
+import AppShell from "./AppShell.jsx";
 
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuthStore();
@@ -9,7 +10,7 @@ export default function ProtectedRoute({ children }) {
   // While the session is still being fetched, show a placeholder so we don't
   // flash a redirect to /login for logged-in users.
   if (loading) {
-    return <div className="min-h-screen bg-zinc-950 text-white p-8">Loading...</div>;
+    return <AppShell><div className="panel muted">Checking your workspace...</div></AppShell>;
   }
 
   // Not authenticated -> bounce to the login page.

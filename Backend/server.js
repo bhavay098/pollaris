@@ -4,6 +4,11 @@ import app from "./src/app.js";
 import { Server } from "socket.io";
 import connectDB from "./src/common/config/db.js";
 import { setIO } from "./src/common/config/socket.js";
+import {
+  closeRedis,
+  connectRedis,
+  createRedisAdapter,
+} from "./src/common/config/redis.js";
 import { auth } from "./src/common/config/auth.js";
 import { fromNodeHeaders } from "better-auth/node";
 import Poll from "./src/modules/polls/poll.model.js";
@@ -68,20 +73,42 @@ io.on("connection", (socket) => {
 // Connect to MongoDB first, then start listening for HTTP and socket traffic.
 const startServer = async () => {
   await connectDB();
+  await connectRedis();
+  io.adapter(createRedisAdapter());
 
   server.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
   });
 };
 
+let isShuttingDown = false;
+
+const shutdown = async (signal) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`Received ${signal}; shutting down gracefully`);
+
+  try {
+    await new Promise((resolve) => io.close(resolve));
+    await closeRedis();
+    process.exit(0);
+  } catch (error) {
+    console.error("Graceful shutdown failed:", error.message);
+    process.exit(1);
+  }
+};
+
+process.once("SIGINT", () => void shutdown("SIGINT"));
+process.once("SIGTERM", () => void shutdown("SIGTERM"));
+
 // Surface startup errors immediately and exit instead of leaving the process half-started.
 server.on("error", (err) => {
   console.error("Failed to start server:", err.message);
-  process.exit(1);
+  void closeRedis().finally(() => process.exit(1));
 });
 
 // Boot the server and treat bootstrap failures as fatal.
 startServer().catch((error) => {
   console.error("Failed to bootstrap server:", error.message);
-  process.exit(1);
+  void closeRedis().finally(() => process.exit(1));
 });

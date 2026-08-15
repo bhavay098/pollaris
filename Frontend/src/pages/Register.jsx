@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
+import AppShell from "../Components/AppShell.jsx";
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -37,26 +38,42 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-        <h1 className="text-2xl font-bold">Register</h1>
-        <div className="space-y-1">
-          <label htmlFor="register-name" className="text-sm text-zinc-300">Name</label>
-          <input id="register-name" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="register-email" className="text-sm text-zinc-300">Email</label>
-          <input id="register-email" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Email" type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="register-password" className="text-sm text-zinc-300">Password</label>
-          <input id="register-password" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Password" type="password" minLength={8} required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
-        </div>
-        {error ? <p className="text-red-400 text-sm">{error}</p> : null}
-        <button disabled={loading} className="w-full bg-teal-500 hover:bg-teal-600 rounded-xl p-3 font-semibold">{loading ? "Creating account..." : "Register"}</button>
-        <button type="button" disabled={loading} onClick={onGoogleSignup} className="w-full border border-zinc-700 hover:bg-zinc-800 rounded-xl p-3 font-semibold">Continue with Google</button>
-        <p className="text-sm text-zinc-400">Have an account? <Link className="text-teal-400" to="/login">Login</Link></p>
-      </form>
-    </div>
+    <AppShell>
+      <div className="auth-layout">
+        <section className="auth-visual" aria-labelledby="register-heading">
+          <span className="eyebrow">Start a signal / 02</span>
+          <h1 id="register-heading" className="page-title">Make every response easier to act on.</h1>
+          <p className="page-description">Create a focused workspace for the questions that matter. Your first poll is only a few considered fields away.</p>
+          <ul className="signal-list">
+            <li>Build question sets with clean, reusable structure.</li>
+            <li>Publish when you are ready, then watch the pattern form.</li>
+          </ul>
+        </section>
+
+        <form onSubmit={onSubmit} className="auth-card">
+          <span className="eyebrow">New workspace</span>
+          <h2>Create your account</h2>
+          <div className="form-stack">
+            <div className="field">
+              <label htmlFor="register-name">Name</label>
+              <input id="register-name" autoComplete="name" placeholder="Your name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label htmlFor="register-email">Email</label>
+              <input id="register-email" autoComplete="email" placeholder="you@company.com" type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label htmlFor="register-password">Password</label>
+              <input id="register-password" autoComplete="new-password" placeholder="At least 8 characters" type="password" minLength={8} required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+            </div>
+            {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
+            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Creating account..." : "Create account"}</button>
+            <div className="auth-divider">or continue with</div>
+            <button type="button" disabled={loading} onClick={onGoogleSignup} className="btn btn-secondary">Google</button>
+          </div>
+          <p className="form-footer">Have an account? <Link className="link-accent" to="/login">Log in</Link></p>
+        </form>
+      </div>
+    </AppShell>
   );
 }

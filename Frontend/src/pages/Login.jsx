@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
+import AppShell from "../Components/AppShell.jsx";
 
 export default function Login() {
   // Local form state; `error` shows any auth failure, `loading` disables
@@ -42,22 +43,38 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-        <h1 className="text-2xl font-bold">Login</h1>
-        <div className="space-y-1">
-          <label htmlFor="login-email" className="text-sm text-zinc-300">Email</label>
-          <input id="login-email" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Email" type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="login-password" className="text-sm text-zinc-300">Password</label>
-          <input id="login-password" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Password" type="password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
-        </div>
-        {error ? <p className="text-red-400 text-sm">{error}</p> : null}
-        <button disabled={loading} className="w-full bg-teal-500 hover:bg-teal-600 rounded-xl p-3 font-semibold">{loading ? "Logging in..." : "Login"}</button>
-        <button type="button" disabled={loading} onClick={onGoogleLogin} className="w-full border border-zinc-700 hover:bg-zinc-800 rounded-xl p-3 font-semibold">Continue with Google</button>
-        <p className="text-sm text-zinc-400">No account? <Link className="text-teal-400" to="/register">Register</Link></p>
-      </form>
-    </div>
+    <AppShell>
+      <div className="auth-layout">
+        <section className="auth-visual" aria-labelledby="login-heading">
+          <span className="eyebrow">Signal access / 01</span>
+          <h1 id="login-heading" className="page-title">See what your audience is saying, in real time.</h1>
+          <p className="page-description">Sign in to pick up where you left off, monitor active polls, and turn responses into a clear next move.</p>
+          <ul className="signal-list">
+            <li>Live response streams, without the spreadsheet sprawl.</li>
+            <li>Poll spaces that stay clear from first draft to final result.</li>
+          </ul>
+        </section>
+
+        <form onSubmit={onSubmit} className="auth-card">
+          <span className="eyebrow">Welcome back</span>
+          <h2>Log in to PulsePoll</h2>
+          <div className="form-stack">
+            <div className="field">
+              <label htmlFor="login-email">Email</label>
+              <input id="login-email" placeholder="you@company.com" type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label htmlFor="login-password">Password</label>
+              <input id="login-password" placeholder="Your password" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+            </div>
+            {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
+            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Logging in..." : "Log in"}</button>
+            <div className="auth-divider">or continue with</div>
+            <button type="button" disabled={loading} onClick={onGoogleLogin} className="btn btn-secondary">Google</button>
+          </div>
+          <p className="form-footer">No account? <Link className="link-accent" to="/register">Create one</Link></p>
+        </form>
+      </div>
+    </AppShell>
   );
 }

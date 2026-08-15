@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
 import { useAuthStore } from "../store/auth-store";
+import AppShell from "../Components/AppShell.jsx";
 
 export default function PublicPoll() {
   const { slug } = useParams();
@@ -101,88 +102,89 @@ export default function PublicPoll() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-zinc-950 text-white p-6">Loading poll...</div>;
+    return <AppShell><div className="panel muted">Loading poll...</div></AppShell>;
   }
 
   if (status.error && !poll) {
-    return <div className="min-h-screen bg-zinc-950 text-red-400 p-6">{status.error}</div>;
+    return <AppShell><div className="alert alert-error" role="alert">{status.error}</div></AppShell>;
   }
 
   // Published results view: no form, just the final numbers.
   if (poll?.isPublished && results) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white p-6">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <h1 className="text-3xl font-bold">{results.poll.title} (Published Results)</h1>
-          <p className="text-zinc-400">Total responses: {results.totalResponses}</p>
+      <AppShell>
+        <section className="public-hero">
+          <span className="eyebrow">Published readout</span>
+          <h1 className="page-title">{results.poll.title}</h1>
+          <div className="public-meta"><span>{results.totalResponses} total responses</span><span>Results are now public</span></div>
+        </section>
+        <div className="analytics-stack" style={{ marginTop: "14px" }}>
           {results.questionWise.map((q) => (
-            <div key={q.questionId} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-              <h2 className="font-semibold">{q.text}</h2>
-              <div className="space-y-1 mt-2 text-sm text-zinc-300">
+            <section key={q.questionId} className="panel">
+              <h2 className="panel-title">{q.text}</h2>
+              <div style={{ marginTop: "18px" }}>
                 {q.options.map((opt) => (
-                  <div key={opt.optionId} className="flex justify-between">
+                  <div key={opt.optionId} className="result-row">
                     <span>{opt.text}</span>
-                    <span>{opt.count} ({opt.percentage}%)</span>
+                    <div className="result-track" aria-hidden="true"><div className="result-fill" style={{ width: `${opt.percentage}%` }} /></div>
+                    <span className="result-value">{opt.count} · {opt.percentage}%</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           ))}
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   // Auth-gated poll: logged-out visitors get a "login required" screen.
   if (poll.responseMode === "AUTHENTICATED" && !user) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white p-6 flex items-center justify-center">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-bold">Login Required</h1>
-          <p className="text-zinc-300">This poll accepts authenticated responses only.</p>
-          <Link className="text-teal-400" to="/login">Go to Login</Link>
+      <AppShell>
+        <div className="auth-layout" style={{ minHeight: "calc(100dvh - 220px)", gridTemplateColumns: "1fr" }}>
+          <section className="auth-card" style={{ maxWidth: "520px", margin: "auto", textAlign: "center" }}>
+            <span className="eyebrow">Private response channel</span>
+            <h1>Login required</h1>
+            <p className="page-description" style={{ marginInline: "auto" }}>This poll accepts authenticated responses only. Sign in to share your answer.</p>
+            <Link className="btn btn-primary" to="/login" style={{ marginTop: "22px" }}>Go to login</Link>
+          </section>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6">
-      <form onSubmit={submit} className="max-w-4xl mx-auto space-y-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-          <h1 className="text-3xl font-bold">{poll.title}</h1>
-          <p className="text-zinc-300 mt-2">{poll.description}</p>
-          <p className="text-sm text-zinc-400 mt-2">Expires: {new Date(poll.expiresAt).toLocaleString()}</p>
-        </div>
+    <AppShell>
+      <form onSubmit={submit} className="builder-grid">
+        <section className="public-hero">
+          <span className="eyebrow">Open response channel</span>
+          <h1 className="page-title">{poll.title}</h1>
+          <p className="page-description">{poll.description}</p>
+          <div className="public-meta"><span>Closes {new Date(poll.expiresAt).toLocaleString()}</span><span>{poll.responseMode === "ANONYMOUS" ? "Anonymous responses" : "Signed-in responses"}</span></div>
+        </section>
 
-        {/* One radio group per question; the required questions are marked * */}
-        {poll.questions.map((question) => (
-          <div key={question.questionId} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-            <h2 className="font-semibold">{question.text} {question.isRequired ? <span className="text-red-400">*</span> : null}</h2>
-            <div className="mt-2 space-y-2">
+        {poll.questions.map((question, questionIndex) => (
+          <section key={question.questionId} className="question-card">
+            <div className="card-heading">
+              <div><span className="eyebrow">Question {String(questionIndex + 1).padStart(2, "0")}</span><h2 className="card-title">{question.text}</h2></div>
+              {question.isRequired ? <span className="status-chip live">Required</span> : <span className="status-chip">Optional</span>}
+            </div>
+            <div className="choice-list">
               {question.options.map((option) => (
-                <label key={option.optionId} className="flex gap-2 text-zinc-300">
-                  <input
-                    type="radio"
-                    name={question.questionId}
-                    value={option.optionId}
-                    checked={answers[question.questionId] === option.optionId}
-                    onChange={() => setAnswers((prev) => ({ ...prev, [question.questionId]: option.optionId }))}
-                  />
+                <label key={option.optionId} className="choice-row">
+                  <input type="radio" name={question.questionId} value={option.optionId} checked={answers[question.questionId] === option.optionId} onChange={() => setAnswers((prev) => ({ ...prev, [question.questionId]: option.optionId }))} />
                   {option.text}
                 </label>
               ))}
             </div>
-          </div>
+          </section>
         ))}
 
-        {status.error ? <p className="text-red-400">{status.error}</p> : null}
-        {status.submitted ? <p className="text-green-400">{status.message}</p> : null}
-
-        <button disabled={isExpired} className="bg-teal-500 disabled:bg-zinc-700 px-5 py-3 rounded-xl font-semibold">
-          {isExpired ? "Poll Expired" : "Submit Response"}
-        </button>
+        {status.error ? <p className="alert alert-error" role="alert">{status.error}</p> : null}
+        {status.submitted ? <p className="alert alert-success" role="status">{status.message}</p> : null}
+        <button type="submit" disabled={isExpired} className="btn btn-primary">{isExpired ? "Poll expired" : "Submit response"}</button>
       </form>
-    </div>
+    </AppShell>
   );
 }

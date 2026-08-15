@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../lib/api";
+import AppShell from "../Components/AppShell.jsx";
 
 // Factory that returns a fresh, empty question with two blank options.
 // IDs are generated with a timestamp + random suffix so each is unique.
@@ -37,25 +38,31 @@ export default function PollBuilder() {
   // Edit mode: load the existing poll and populate the form once.
   useEffect(() => {
     if (!isEdit) return;
+    let cancelled = false;
 
     const loadPoll = async () => {
       try {
         const response = await api.getPollById(pollId);
         const poll = response.data.poll;
-        setForm({
-          title: poll.title,
-          description: poll.description || "",
-          responseMode: poll.responseMode,
-          // datetime-local inputs expect "YYYY-MM-DDTHH:MM"; slice drops seconds.
-          expiresAt: new Date(poll.expiresAt).toISOString().slice(0, 16),
-          questions: poll.questions,
-        });
+        if (!cancelled) {
+          setForm({
+            title: poll.title,
+            description: poll.description || "",
+            responseMode: poll.responseMode,
+            // datetime-local inputs expect "YYYY-MM-DDTHH:MM"; slice drops seconds.
+            expiresAt: new Date(poll.expiresAt).toISOString().slice(0, 16),
+            questions: poll.questions,
+          });
+        }
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) setError(err.message);
       }
     };
 
-    loadPoll();
+    void loadPoll();
+    return () => {
+      cancelled = true;
+    };
   }, [isEdit, pollId]);
 
   // --- Immutable state updates for the question list ---
@@ -137,73 +144,86 @@ export default function PollBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6">
-      <div className="max-w-4xl mx-auto space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">{isEdit ? "Edit Poll" : "Create Poll"}</h1>
-          <Link to="/dashboard" className="text-teal-400">Back</Link>
+    <AppShell>
+      <div className="page-heading">
+        <div>
+          <span className="eyebrow">Poll studio / {isEdit ? "revision" : "new signal"}</span>
+          <h1 className="page-title">{isEdit ? "Tune the question set." : "Build a better question."}</h1>
+          <p className="page-description">Give your audience a focused prompt, a clear set of choices, and enough context to answer with confidence.</p>
         </div>
-
-        <form onSubmit={submit} className="space-y-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-            <div className="space-y-1">
-              <label htmlFor="poll-title" className="text-sm text-zinc-300">Poll title</label>
-              <input id="poll-title" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Poll title" required value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="poll-description" className="text-sm text-zinc-300">Description</label>
-              <textarea id="poll-description" className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Description" rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
-            </div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <select className="w-full p-3 rounded-xl bg-zinc-800" value={form.responseMode} onChange={(e) => setForm((prev) => ({ ...prev, responseMode: e.target.value }))}>
-                <option value="ANONYMOUS">Anonymous responses</option>
-                <option value="AUTHENTICATED">Authenticated responses</option>
-              </select>
-              <input className="w-full p-3 rounded-xl bg-zinc-800" type="datetime-local" required value={form.expiresAt} onChange={(e) => setForm((prev) => ({ ...prev, expiresAt: e.target.value }))} />
-            </div>
-          </div>
-
-          {/* Render one editable card per question, with its options */}
-          {form.questions.map((question, qIndex) => (
-            <div key={question.questionId} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <h2 className="font-semibold">Question {qIndex + 1}</h2>
-                <button type="button" className="text-red-400 text-sm" onClick={() => removeQuestion(qIndex)}>Remove</button>
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor={`question-${question.questionId}`} className="text-sm text-zinc-300">Question text</label>
-                <input id={`question-${question.questionId}`} className="w-full p-3 rounded-xl bg-zinc-800" placeholder="Question text" required value={question.text} onChange={(e) => updateQuestion(qIndex, { text: e.target.value })} />
-              </div>
-
-              <label className="flex items-center gap-2 text-sm text-zinc-300">
-                <input type="checkbox" checked={question.isRequired} onChange={(e) => updateQuestion(qIndex, { isRequired: e.target.checked })} />
-                Required question
-              </label>
-
-              <div className="space-y-2">
-                {question.options.map((option, oIndex) => (
-                  <div key={option.optionId} className="flex gap-2">
-                    <div className="flex-1 space-y-1">
-                      <label htmlFor={`option-${option.optionId}`} className="text-sm text-zinc-300">Option {oIndex + 1}</label>
-                      <input id={`option-${option.optionId}`} className="w-full p-3 rounded-xl bg-zinc-800" placeholder={`Option ${oIndex + 1}`} required value={option.text} onChange={(e) => updateOption(qIndex, oIndex, e.target.value)} />
-                    </div>
-                    <button type="button" className="px-3 rounded-xl bg-zinc-800" onClick={() => removeOption(qIndex, oIndex)}>X</button>
-                  </div>
-                ))}
-                <button type="button" className="text-teal-400 text-sm" onClick={() => addOption(qIndex)}>+ Add option</button>
-              </div>
-            </div>
-          ))}
-
-          {error ? <p className="text-red-400">{error}</p> : null}
-
-          <div className="flex gap-3">
-            <button type="button" className="bg-zinc-800 hover:bg-zinc-700 px-4 py-3 rounded-xl" onClick={addQuestion}>+ Add question</button>
-            <button disabled={loading} className="bg-teal-500 hover:bg-teal-600 px-4 py-3 rounded-xl font-semibold">{loading ? "Saving..." : isEdit ? "Update Poll" : "Create Poll"}</button>
-          </div>
-        </form>
+        <Link to="/dashboard" className="btn btn-quiet">Back to dashboard</Link>
       </div>
-    </div>
+
+      <form onSubmit={submit} className="builder-grid">
+        <section className="panel builder-details" aria-labelledby="poll-details-heading">
+          <div className="panel-heading">
+            <div><span className="eyebrow">01 / framing</span><h2 id="poll-details-heading" className="panel-title">Set the context</h2></div>
+            <span className="meta-label">Required fields marked by form</span>
+          </div>
+          <div className="field">
+            <label htmlFor="poll-title">Poll title</label>
+            <input id="poll-title" placeholder="e.g. What should we improve next?" required value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
+          </div>
+          <div className="field">
+            <label htmlFor="poll-description">Description <span className="muted">(optional)</span></label>
+            <textarea id="poll-description" placeholder="A short note that helps people understand the decision behind this poll." rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
+          </div>
+          <div className="split-fields">
+            <div className="field">
+              <label htmlFor="response-mode">Who can respond?</label>
+              <select id="response-mode" value={form.responseMode} onChange={(e) => setForm((prev) => ({ ...prev, responseMode: e.target.value }))}>
+                <option value="ANONYMOUS">Anyone, anonymously</option>
+                <option value="AUTHENTICATED">Signed-in people only</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="expires-at">Close responses at</label>
+              <input id="expires-at" type="datetime-local" required value={form.expiresAt} onChange={(e) => setForm((prev) => ({ ...prev, expiresAt: e.target.value }))} />
+            </div>
+          </div>
+        </section>
+
+        {form.questions.map((question, qIndex) => (
+          <section key={question.questionId} className="question-card" aria-labelledby={`question-heading-${question.questionId}`}>
+            <div className="card-heading">
+              <div className="flex items-center gap-3">
+                <span className="question-index">{String(qIndex + 1).padStart(2, "0")}</span>
+                <div><span className="eyebrow">Question block</span><h2 id={`question-heading-${question.questionId}`} className="card-title">Ask something useful</h2></div>
+              </div>
+              <button type="button" className="btn btn-danger" onClick={() => removeQuestion(qIndex)}>Remove</button>
+            </div>
+
+            <div className="field" style={{ marginTop: "20px" }}>
+              <label htmlFor={`question-${question.questionId}`}>Question text</label>
+              <input id={`question-${question.questionId}`} placeholder="Write the question your audience can answer." required value={question.text} onChange={(e) => updateQuestion(qIndex, { text: e.target.value })} />
+            </div>
+
+            <label className="check-row" style={{ marginTop: "15px" }}>
+              <input type="checkbox" checked={question.isRequired} onChange={(e) => updateQuestion(qIndex, { isRequired: e.target.checked })} />
+              Require an answer
+            </label>
+
+            <div className="question-options">
+              {question.options.map((option, oIndex) => (
+                <div key={option.optionId} className="option-row">
+                  <div className="field">
+                    <label htmlFor={`option-${option.optionId}`}>Choice {oIndex + 1}</label>
+                    <input id={`option-${option.optionId}`} placeholder={`Answer option ${oIndex + 1}`} required value={option.text} onChange={(e) => updateOption(qIndex, oIndex, e.target.value)} />
+                  </div>
+                  <button type="button" className="icon-button" aria-label={`Remove choice ${oIndex + 1}`} onClick={() => removeOption(qIndex, oIndex)}>×</button>
+                </div>
+              ))}
+              <button type="button" className="btn btn-quiet" onClick={() => addOption(qIndex)}>+ Add another choice</button>
+            </div>
+          </section>
+        ))}
+
+        {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
+        <div className="button-row">
+          <button type="button" className="btn btn-secondary" onClick={addQuestion}>+ Add question</button>
+          <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Saving..." : isEdit ? "Save changes" : "Create poll"}</button>
+        </div>
+      </form>
+    </AppShell>
   );
 }

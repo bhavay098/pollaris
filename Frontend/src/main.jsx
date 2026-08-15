@@ -7,10 +7,13 @@ import App from "./App.jsx";
 // AuthSessionSync renders nothing but keeps the auth store in sync with
 // better-auth's session (it must mount once at the app root).
 import AuthSessionSync from "./Components/AuthSessionSync";
+import { ThemeProvider } from "./Components/ThemeProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthSessionSync />
-    <App />
+    <ThemeProvider>
+      <AuthSessionSync />
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 );

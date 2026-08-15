@@ -39,6 +39,20 @@ cd Backend && node scripts/rebuild-response-indexes.js
 
 Backend runs on `http://localhost:3000` by default.
 
+### Redis setup
+
+Socket.IO uses Redis Pub/Sub so events are synchronized when multiple backend
+instances are running. Redis is required in every environment. Add this to
+`Backend/.env`:
+
+```env
+REDIS_URL=redis://localhost:6379
+```
+
+Each backend instance must use the same `REDIS_URL`. To run multiple local
+instances, start them on different `PORT` values while pointing them at the
+same Redis server.
+
 ### Authentication setup
 
 PollCraft uses Better Auth with MongoDB for email/password and Google sign-in. Add these values to `Backend/.env`:

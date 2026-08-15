@@ -2,10 +2,11 @@
 // owner. Shows response counts, per-question option breakdowns, participation
 // insights, and a "Publish Final Results" button. Data refreshes live over
 // WebSocket whenever a new response arrives.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
+import AppShell from "../Components/AppShell.jsx";
 
 export default function PollAnalytics() {
   const { pollId } = useParams();
@@ -13,6 +14,7 @@ export default function PollAnalytics() {
   const [questions, setQuestions] = useState([]);
   const [participation, setParticipation] = useState([]);
   const [error, setError] = useState("");
+  const loadAllRef = useRef(() => {});
 
   // Fetch all three analytics endpoints in parallel.
   const fetchAll = useCallback(async () => {
@@ -43,6 +45,10 @@ export default function PollAnalytics() {
     }
   }, [fetchAll]);
 
+  useEffect(() => {
+    loadAllRef.current = loadAll;
+  }, [loadAll]);
+
   // Initial load when the page or pollId changes.
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +75,7 @@ export default function PollAnalytics() {
     socket.emit("poll:join_owner", { pollId });
 
     const onRealtime = () => {
-      loadAll();
+      void loadAllRef.current();
     };
 
     socket.on("analytics:response_received", onRealtime);
@@ -83,7 +89,7 @@ export default function PollAnalytics() {
       socket.off("poll:status_changed", onRealtime);
       socket.disconnect();
     };
-  }, [loadAll, pollId]);
+  }, [pollId]);
 
   // Make the results public/shared (publish final results), then refresh.
   const publish = async () => {
@@ -96,94 +102,73 @@ export default function PollAnalytics() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Poll Analytics</h1>
-          <Link to="/dashboard" className="text-teal-400">
-            Back
-          </Link>
+    <AppShell>
+      <div className="page-heading">
+        <div>
+          <span className="eyebrow">Readout / live analytics</span>
+          <h1 className="page-title">Find the shape of the answer.</h1>
+          <p className="page-description">A live readout of response volume, choice patterns, and where people are choosing not to answer.</p>
         </div>
+        <Link to="/dashboard" className="btn btn-quiet">Back to dashboard</Link>
+      </div>
 
-        {error ? <p className="text-red-400">{error}</p> : null}
+      {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
 
-        {summary ? (
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-              <p className="text-zinc-400 text-sm">Total Responses</p>
-              <p className="text-2xl font-bold">{summary.totalResponses}</p>
-            </div>
-            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-              <p className="text-zinc-400 text-sm">Anonymous</p>
-              <p className="text-2xl font-bold">
-                {summary.participantBreakdown.anonymous}
-              </p>
-            </div>
-            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-              <p className="text-zinc-400 text-sm">Authenticated</p>
-              <p className="text-2xl font-bold">
-                {summary.participantBreakdown.authenticated}
-              </p>
-            </div>
-            <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-              <p className="text-zinc-400 text-sm">Published</p>
-              <p className="text-2xl font-bold">
-                {summary.isPublished ? "Yes" : "No"}
-              </p>
-            </div>
+      {summary ? (
+        <div className="stat-grid" aria-label="Analytics summary">
+          <div className="stat-card"><span className="stat-label">Total responses</span><strong className="stat-value">{summary.totalResponses}</strong></div>
+          <div className="stat-card"><span className="stat-label">Anonymous</span><strong className="stat-value">{summary.participantBreakdown.anonymous}</strong></div>
+          <div className="stat-card"><span className="stat-label">Authenticated</span><strong className="stat-value">{summary.participantBreakdown.authenticated}</strong></div>
+          <div className="stat-card"><span className="stat-label">Publication</span><strong className={`stat-value ${summary.isPublished ? "success" : "accent"}`}>{summary.isPublished ? "Live" : "Draft"}</strong></div>
+        </div>
+      ) : <div className="panel muted">Loading analytics...</div>}
+
+      <div className="analytics-stack">
+        <section className="panel" aria-labelledby="question-counts-heading">
+          <div className="panel-heading">
+            <div><span className="eyebrow">Response pattern</span><h2 id="question-counts-heading" className="panel-title">Question-wise option counts</h2></div>
+            <span className="meta-label">Updates live</span>
           </div>
-        ) : (
-          <p>Loading analytics...</p>
-        )}
+          {questions.length === 0 ? <p className="panel-copy">No response data yet. Your first answer will appear here.</p> : null}
+          {questions.map((q) => {
+            const totalVotes = q.options.reduce((total, option) => total + option.count, 0);
+            return (
+              <div key={q.questionId} className="analytics-question">
+                <p className="card-title">{q.text}</p>
+                <div style={{ marginTop: "16px" }}>
+                  {q.options.map((opt) => {
+                    const percentage = totalVotes ? Math.round((opt.count / totalVotes) * 100) : 0;
+                    return (
+                      <div key={opt.optionId} className="result-row">
+                        <span>{opt.text}</span>
+                        <div className="result-track" aria-hidden="true"><div className="result-fill" style={{ width: `${percentage}%` }} /></div>
+                        <span className="result-value">{opt.count} · {percentage}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </section>
 
-        <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">
-              Question-wise Option Counts
-            </h2>
+        <section className="panel" aria-labelledby="participation-heading">
+          <div className="panel-heading">
+            <div><span className="eyebrow">Participation</span><h2 id="participation-heading" className="panel-title">Where attention drops</h2></div>
           </div>
-          {questions.map((q) => (
-            <div
-              key={q.questionId}
-              className="border border-zinc-800 rounded-xl p-3"
-            >
-              <p className="font-medium">{q.text}</p>
-              <div className="mt-2 space-y-1 text-sm text-zinc-300">
-                {q.options.map((opt) => (
-                  <div key={opt.optionId} className="flex justify-between">
-                    <span>{opt.text}</span>
-                    <span>{opt.count}</span>
-                  </div>
-                ))}
+          {participation.length === 0 ? <p className="panel-copy">Participation insights will appear after responses come in.</p> : null}
+          {participation.map((item) => (
+            <div key={item.questionId} className="analytics-question">
+              <div className="panel-heading">
+                <span className="panel-copy">{item.text}</span>
+                <span className="result-value">Answered {item.answeredCount} · Skipped {item.skipCount}</span>
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-3">
-          <h2 className="text-xl font-semibold">Participation Insights</h2>
-          {participation.map((item) => (
-            <div
-              key={item.questionId}
-              className="flex justify-between text-sm border-b border-zinc-800 py-2"
-            >
-              <span>{item.text}</span>
-              <span>
-                Answered: {item.answeredCount} | Skipped: {item.skipCount}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {!summary?.isPublished ? (
-          <button
-            className="bg-teal-500 hover:bg-teal-600 rounded-xl px-4 py-3 font-semibold"
-            onClick={publish}
-          >
-            Publish Final Results
-          </button>
-        ) : null}
+        </section>
       </div>
-    </div>
+
+      {!summary?.isPublished ? <button className="btn btn-primary" onClick={publish} style={{ marginTop: "18px" }}>Publish final results</button> : null}
+    </AppShell>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { useAuthStore } from "../store/auth-store";
+import AppShell from "../Components/AppShell.jsx";
 
 export default function Dashboard() {
   const [polls, setPolls] = useState([]);
@@ -72,68 +73,65 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold">Poll Dashboard</h1>
-            <p className="text-zinc-400">Welcome, {user?.name}</p>
-          </div>
-          <div className="flex gap-2">
-            <Link className="bg-teal-500 hover:bg-teal-600 px-4 py-2 rounded-xl font-medium" to="/dashboard/polls/new">Create Poll</Link>
-            <button className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-xl" onClick={logout}>Logout</button>
-          </div>
-        </header>
+    <AppShell>
+      <div className="page-heading">
+        <div>
+          <span className="eyebrow">Command center / overview</span>
+          <h1 className="page-title">Your questions, in motion.</h1>
+          <p className="page-description">Welcome back, {user?.name}. Keep a clear view of what is live, what is still taking shape, and where the signal is strongest.</p>
+        </div>
+        <div className="page-actions">
+          <Link className="btn btn-primary" to="/dashboard/polls/new">Create poll</Link>
+          <button className="btn btn-quiet" onClick={logout}>Log out</button>
+        </div>
+      </div>
 
-        {loading ? <p>Loading polls...</p> : null}
-        {error ? <p className="text-red-400">{error}</p> : null}
+      <div className="stat-grid" aria-label="Poll overview">
+        <div className="stat-card"><span className="stat-label">Polls in space</span><strong className="stat-value">{polls.length}</strong></div>
+        <div className="stat-card"><span className="stat-label">Live now</span><strong className="stat-value success">{polls.filter((poll) => poll.isPublished).length}</strong></div>
+        <div className="stat-card"><span className="stat-label">Responses</span><strong className="stat-value">{polls.reduce((total, poll) => total + (poll.totalResponses || 0), 0)}</strong></div>
+        <div className="stat-card"><span className="stat-label">Mode</span><strong className="stat-value accent">Live</strong></div>
+      </div>
 
-        {/* Poll list; each card shows the title/slug and action links */}
-        <div className="grid gap-4">
+      {loading ? <div className="panel muted">Syncing your poll space...</div> : null}
+      {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
+
+      {!loading && polls.length > 0 ? (
+        <div className="poll-list">
           {polls.map((poll) => (
-            <div key={poll.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-              <div className="flex flex-wrap justify-between gap-2">
+            <article key={poll.id} className="poll-card">
+              <div className="card-heading">
                 <div>
-                  <h2 className="text-xl font-semibold">{poll.title}</h2>
-                  <p className="text-zinc-400 text-sm">/{poll.slug}</p>
+                  <h2 className="poll-card-title">{poll.title}</h2>
+                  <p className="poll-slug">/{poll.slug}</p>
                 </div>
-                <div className="text-right text-sm text-zinc-300">
-                  <p>{poll.totalResponses} responses</p>
-                  <p>{poll.isPublished ? "Published" : "Not published"}</p>
+                <div className="poll-meta">
+                  <span>{poll.totalResponses} responses</span>
+                  <span className={`status-chip ${poll.isPublished ? "live" : "draft"}`}>{poll.isPublished ? "Published" : "Draft"}</span>
                 </div>
               </div>
-              <div className="flex gap-2 mt-4 flex-wrap">
-                <Link className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" to={`/dashboard/polls/${poll.id}/edit`}>Edit</Link>
-                <Link className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" to={`/dashboard/polls/${poll.id}/analytics`}>Analytics</Link>
+              <div className="card-actions" style={{ marginTop: "20px" }}>
+                <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/edit`}>Edit poll</Link>
+                <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/analytics`}>View analytics</Link>
                 {!poll.isPublished ? (
-                  <button
-                    className="bg-teal-500 hover:bg-teal-600 disabled:bg-zinc-700 rounded-lg px-3 py-2 text-sm font-medium"
-                    type="button"
-                    disabled={publishingId === poll.id}
-                    onClick={() => void publishPoll(poll.id)}
-                  >
-                    {publishingId === poll.id ? "Publishing..." : "Publish Poll"}
+                  <button className="btn btn-primary" type="button" disabled={publishingId === poll.id} onClick={() => void publishPoll(poll.id)}>
+                    {publishingId === poll.id ? "Publishing..." : "Publish poll"}
                   </button>
                 ) : (
                   <>
-                    <button
-                      className="bg-teal-500 hover:bg-teal-600 disabled:bg-zinc-700 rounded-lg px-3 py-2 text-sm font-medium"
-                      type="button"
-                      disabled={sharingId === poll.id}
-                      onClick={() => void sharePoll(poll)}
-                    >
-                      {sharingId === poll.id ? "Sharing..." : "Share Poll"}
+                    <button className="btn btn-primary" type="button" disabled={sharingId === poll.id} onClick={() => void sharePoll(poll)}>
+                      {sharingId === poll.id ? "Sharing..." : "Share poll"}
                     </button>
-                    <Link className="bg-zinc-800 hover:bg-zinc-700 rounded-lg px-3 py-2 text-sm" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open Public Link</Link>
+                    <Link className="btn btn-quiet" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open public link</Link>
                   </>
                 )}
               </div>
-            </div>
+            </article>
           ))}
-          {/* Empty state, shown only after loading finishes with no polls */}
-          {!loading && polls.length === 0 ? <p className="text-zinc-400">No polls yet. Create your first poll.</p> : null}
         </div>
-      </div>
-    </div>
+      ) : null}
+
+      {!loading && polls.length === 0 ? <div className="empty-state"><strong>Your first signal starts here.</strong>Create a poll to begin collecting responses.</div> : null}
+    </AppShell>
   );
 }
