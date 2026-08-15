@@ -97,9 +97,7 @@ export default function Hero() {
                   Live Poll
                 </p>
                 <h3 className="mt-3 text-2xl font-bold leading-[1.08]">
-                  Future of
-                  <br />
-                  Web Development
+                  Future of Polling
                 </h3>
               </div>
               <div className="w-16 h-16 rounded-full border border-teal-400/30 flex items-center justify-center text-teal-300 font-semibold text-lg shadow-[0_0_30px_rgba(20,184,166,0.2)]">

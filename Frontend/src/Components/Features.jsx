@@ -33,7 +33,7 @@ const features = [
 
 export default function Features() {
   return (
-    <section className="max-w-7xl mx-auto px-6 pb-24">
+    <section id="features" className="max-w-7xl mx-auto px-6 pb-24">
       <div className="h-px bg-white/10 mb-24" />
       <div className="text-center max-w-3xl mx-auto">
         <p className="text-xs uppercase tracking-[0.12em] text-teal-400 font-semibold">
@@ -51,10 +51,8 @@ export default function Features() {
       </div>
       <div className="mt-16 grid md:grid-cols-2 xl:grid-cols-4 gap-5">
         {features.map((feature) => (
-          <div
-            key={feature.title}
-          >
-            <div className="group rounded-3xl border border-white/8 bg-zinc-800/50 p-7">
+          <div key={feature.title} className="h-full">
+            <div className="group flex h-full flex-col rounded-3xl border border-white/8 bg-zinc-800/50 p-7">
               <div
                 className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center text-lg font-semibold text-white`}
               >
@@ -63,7 +61,7 @@ export default function Features() {
               <h4 className="mt-6 text-lg font-bold text-white">
                 {feature.title}
               </h4>
-              <p className="mt-3 text-zinc-400 text-sm leading-relaxed">
+              <p className="mt-3 text-sm leading-relaxed text-zinc-400">
                 {feature.description}
               </p>
             </div>

@@ -41,7 +41,7 @@ const colorMap = {
 
 export default function HowItWorks() {
   return (
-    <section className="max-w-6xl mx-auto px-6 pb-28">
+    <section id="how-it-works" className="max-w-6xl mx-auto px-6 pb-28">
       <div className="h-px bg-white/10 mb-24" />
       <div className="text-center max-w-3xl mx-auto mb-20">
         <p className="text-xs uppercase tracking-[0.12em] text-cyan-400 font-semibold">

@@ -4,6 +4,12 @@ import ActionButton from "./ui/ActionButton.jsx";
 import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle.jsx";
 
+const navLinks = [
+  { label: "Features", href: "#features" },
+  { label: "How It Works", href: "#how-it-works" },
+  { label: "About", href: "#about" },
+];
+
 export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 w-full z-50 px-5 pt-4">
@@ -29,13 +35,13 @@ export default function Navbar() {
             </Link>
             {/* Desktop-only nav links (hidden below lg breakpoint) */}
             <nav className="hidden lg:flex items-center gap-1">
-              {["Features", "How It Works", "Pricing", "About"].map((item) => (
+              {navLinks.map((item) => (
                 <a
-                  key={item}
-                  href="#"
+                  key={item.label}
+                  href={item.href}
                   className="px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/6"
                 >
-                  {item}
+                  {item.label}
                 </a>
               ))}
             </nav>

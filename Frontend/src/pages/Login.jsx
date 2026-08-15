@@ -44,7 +44,7 @@ export default function Login() {
   };
 
   return (
-    <AppShell>
+    <AppShell mainClassName="auth-main">
       <div className="auth-layout">
         <section className="auth-visual" aria-labelledby="login-heading">
           <span className="eyebrow">Signal access / 01</span>

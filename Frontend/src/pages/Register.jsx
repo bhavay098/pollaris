@@ -39,7 +39,7 @@ export default function Register() {
   };
 
   return (
-    <AppShell>
+    <AppShell mainClassName="auth-main">
       <div className="auth-layout">
         <section className="auth-visual" aria-labelledby="register-heading">
           <span className="eyebrow">Start a signal / 02</span>

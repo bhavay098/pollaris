@@ -9,10 +9,12 @@ import PollBuilder from "./pages/PollBuilder";
 import PollAnalytics from "./pages/PollAnalytics";
 import PublicPoll from "./pages/PublicPoll";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import AuthTimeoutManager from "./Components/AuthTimeoutManager";
 
 function App() {
   return (
     <BrowserRouter>
+      <AuthTimeoutManager />
       <Routes>
         {/* Public marketing page */}
         <Route path="/" element={<Home />} />
