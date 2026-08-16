@@ -40,8 +40,7 @@ export default function Features() {
           Platform Features
         </p>
         <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
-          Designed for modern{" "}
-          <br className="hidden sm:block" />
+          Designed for modern <br className="hidden sm:block" />
           realtime engagement.
         </h3>
         <p className="mt-6 text-zinc-400 text-base leading-relaxed">

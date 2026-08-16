@@ -39,16 +39,13 @@ export default function Testimonials() {
           Testimonials
         </p>
         <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
-          Loved by teams who value{" "}
-          <br className="hidden sm:block" />
+          Loved by teams who value <br className="hidden sm:block" />
           fast, clear decisions.
         </h3>
       </div>
       <div className="grid md:grid-cols-3 gap-6">
         {testimonials.map((t) => (
-          <div
-            key={t.name}
-          >
+          <div key={t.name}>
             <div className="rounded-3xl border border-white/8 bg-zinc-800/50 p-7">
               <div className="flex gap-1 mb-5">
                 {[...Array(t.stars)].map((_, i) => (

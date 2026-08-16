@@ -18,14 +18,20 @@ export default function AppShell({ children, mainClassName = "" }) {
       navigate("/login", { replace: true });
     } catch (error) {
       // Show a toast instead of crashing if sign-out fails for some reason.
-      toast.error(error instanceof Error ? error.message : "Unable to sign out right now.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign out right now.",
+      );
     }
   };
 
   return (
     <div className="app-shell">
       {/* Skip link lets keyboard users jump straight to the content. */}
-      <a className="skip-link" href="#main-content">Skip to content</a>
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       {/* Decorative animated background, hidden from screen readers. */}
       <div className="app-atmosphere" aria-hidden="true" />
       <header className="app-topbar">
@@ -44,10 +50,17 @@ export default function AppShell({ children, mainClassName = "" }) {
           {/* Settings + sign out only make sense for a logged-in user. */}
           {user ? (
             <>
-              <Link to="/dashboard/settings" className="btn btn-quiet app-settings-link">
+              <Link
+                to="/dashboard/settings"
+                className="btn btn-quiet app-settings-link"
+              >
                 Settings
               </Link>
-              <button className="btn btn-quiet app-signout" type="button" onClick={handleSignOut}>
+              <button
+                className="btn btn-quiet app-signout"
+                type="button"
+                onClick={handleSignOut}
+              >
                 Sign out
               </button>
             </>
@@ -57,7 +70,9 @@ export default function AppShell({ children, mainClassName = "" }) {
       </header>
 
       {/* The page-specific content is passed in as children by the route. */}
-      <main id="main-content" className={`app-main ${mainClassName}`.trim()}>{children}</main>
+      <main id="main-content" className={`app-main ${mainClassName}`.trim()}>
+        {children}
+      </main>
     </div>
   );
 }

@@ -49,11 +49,8 @@ export default function Hero() {
             </span>
           </div>
           <h2 className="home-hero-title mt-7 font-bold leading-[0.98] tracking-[-0.03em]">
-            Polling{" "}
-            <br className="hidden sm:block" />
-            <span className="text-teal-400">
-              Reimagined
-            </span>{" "}
+            Polling <br className="hidden sm:block" />
+            <span className="text-teal-400">Reimagined</span>{" "}
             <br className="hidden sm:block" />
             In Real Time.
           </h2>
@@ -63,10 +60,19 @@ export default function Hero() {
             modern collaborative platform.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row flex-wrap gap-4">
-            <ActionButton as={Link} to={authTarget} className="w-full sm:w-auto px-7 py-3.5 justify-center">
+            <ActionButton
+              as={Link}
+              to={authTarget}
+              className="w-full sm:w-auto px-7 py-3.5 justify-center"
+            >
               Launch Poll
             </ActionButton>
-            <ActionButton as={Link} to={authTarget} variant="secondary" className="w-full sm:w-auto px-7 py-3.5 justify-center">
+            <ActionButton
+              as={Link}
+              to={authTarget}
+              variant="secondary"
+              className="w-full sm:w-auto px-7 py-3.5 justify-center"
+            >
               Login
             </ActionButton>
           </div>
@@ -117,7 +123,10 @@ export default function Hero() {
                     <span className="text-zinc-400">{item.value}</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-white/5 overflow-hidden">
-                    <div className={`h-full rounded-full ${item.color}`} style={{ width: item.width }} />
+                    <div
+                      className={`h-full rounded-full ${item.color}`}
+                      style={{ width: item.width }}
+                    />
                   </div>
                 </div>
               ))}

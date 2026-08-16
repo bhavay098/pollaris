@@ -2,7 +2,7 @@
 // React context. Mounted once at the app root (main.jsx) so every component
 // can read the theme via useTheme().
 import { useLayoutEffect, useState } from "react";
-import { THEME_STORAGE_KEY, ThemeContext } from "./theme-context.js";
+import { THEME_STORAGE_KEY, ThemeContext } from "../hooks/theme-context.js";
 
 // Decide the starting theme the first time the provider mounts:
 // a saved preference wins, otherwise fall back to the OS setting.

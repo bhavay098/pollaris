@@ -41,15 +41,17 @@ const colorMap = {
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="max-w-6xl mx-auto px-6 pb-12 md:pb-28">
+    <section
+      id="how-it-works"
+      className="max-w-6xl mx-auto px-6 pb-12 md:pb-28"
+    >
       <div className="h-px bg-white/10 mb-12 md:mb-24" />
       <div className="text-center max-w-3xl mx-auto mb-20">
         <p className="text-xs uppercase tracking-[0.12em] text-cyan-400 font-semibold">
           How It Works
         </p>
         <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
-          From idea to live poll{" "}
-          <br className="hidden sm:block" />
+          From idea to live poll <br className="hidden sm:block" />
           in under 60 seconds.
         </h3>
       </div>

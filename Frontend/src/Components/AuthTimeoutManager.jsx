@@ -6,7 +6,13 @@ import { useAuthStore } from "../store/auth-store";
 
 const AUTH_INACTIVITY_LIMIT_MS = 24 * 60 * 60 * 1000;
 const LAST_ACTIVITY_KEY = "pollaris:last-auth-activity";
-const ACTIVITY_EVENTS = ["click", "keydown", "mousemove", "scroll", "touchstart"];
+const ACTIVITY_EVENTS = [
+  "click",
+  "keydown",
+  "mousemove",
+  "scroll",
+  "touchstart",
+];
 
 function readLastActivity() {
   try {

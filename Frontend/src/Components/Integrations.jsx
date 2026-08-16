@@ -27,9 +27,7 @@ export default function Integrations() {
         </div>
         <div className="relative grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 sm:gap-4">
           {integrations.map((item) => (
-            <div
-              key={item.name}
-            >
+            <div key={item.name}>
               <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border border-white/8 bg-white/4 backdrop-blur-xl cursor-pointer hover:border-white/15">
                 <div
                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ${item.color} flex items-center justify-center text-sm font-semibold text-white`}

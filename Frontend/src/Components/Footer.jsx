@@ -11,11 +11,7 @@ export default function Footer() {
         </div>
         <div className="flex items-center gap-6 text-xs text-zinc-600">
           {["Privacy", "Terms", "Security", "Status", "Docs"].map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="hover:text-zinc-400"
-            >
+            <a key={link} href="#" className="hover:text-zinc-400">
               {link}
             </a>
           ))}

@@ -7,7 +7,11 @@ import { useAuthStore } from "../store/auth-store";
 export default function AuthSessionSync() {
   // better-auth hook that subscribes to the current session; `refetch` lets
   // us manually re-pull it later (used after login/logout).
-  const { data: session, isPending: loading, refetch } = authClient.useSession();
+  const {
+    data: session,
+    isPending: loading,
+    refetch,
+  } = authClient.useSession();
   const setSession = useAuthStore((state) => state.setSession);
   const setSessionRefetch = useAuthStore((state) => state.setSessionRefetch);
 

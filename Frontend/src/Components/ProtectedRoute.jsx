@@ -10,7 +10,11 @@ export default function ProtectedRoute({ children }) {
   // While the session is still being fetched, show a placeholder so we don't
   // flash a redirect to /login for logged-in users.
   if (loading) {
-    return <AppShell><div className="panel muted">Checking your workspace…</div></AppShell>;
+    return (
+      <AppShell>
+        <div className="panel muted">Checking your workspace…</div>
+      </AppShell>
+    );
   }
 
   // Not authenticated -> bounce to the login page.
