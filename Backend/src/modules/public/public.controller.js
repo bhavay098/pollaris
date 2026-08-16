@@ -118,6 +118,11 @@ const submitPublicResponse = async (req, res, next) => {
         throw ApiError.unauthorized("Login is required to submit this poll");
       }
 
+      // Poll creators cannot submit responses to their own polls.
+      if (req.user && req.user.id === String(poll.createdBy)) {
+        throw ApiError.forbidden("Poll creators cannot submit responses to their own poll");
+      }
+
       validateSubmission(poll, req.body?.answers);
 
       const payload = {
@@ -193,8 +198,8 @@ const getPublicResults = async (req, res, next) => {
       throw ApiError.notFound("Poll not found");
     }
 
-    // Results stay hidden until the poll owner publishes the poll.
-    if (!poll.isPublished) {
+    // Results stay hidden until the poll owner explicitly publishes them.
+    if (!poll.resultsPublished) {
       throw ApiError.forbidden("Poll results are not published yet");
     }
 

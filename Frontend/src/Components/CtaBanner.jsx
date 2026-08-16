@@ -9,8 +9,8 @@ export default function CtaBanner() {
   const authTarget = user ? "/dashboard" : "/login";
 
   return (
-    <section className="max-w-6xl mx-auto px-6 pb-24">
-      <div className="relative overflow-hidden rounded-3xl border border-teal-400/20 bg-zinc-900 p-14 text-center">
+    <section className="max-w-6xl mx-auto px-6 pb-12 md:pb-24">
+      <div className="relative overflow-hidden rounded-3xl border border-teal-400/20 bg-zinc-900 p-8 md:p-14 text-center">
                 <div className="relative">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-400/25 bg-teal-400/8 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
@@ -20,7 +20,9 @@ export default function CtaBanner() {
           </div>
           <h2 className="text-4xl md:text-6xl font-bold tracking-[-0.025em] leading-[1.08]">
             Ready to run your
-            <br />
+            {" "}
+            <br className="hidden sm:block" />
+            {" "}
             <span className="text-teal-400">
               first live poll?
             </span>

@@ -43,6 +43,10 @@ const formatPublicPoll = (poll) => ({
   expiresAt: poll.expiresAt,
   isPublished: poll.isPublished,
   publishedAt: poll.publishedAt,
+  resultsPublished: poll.resultsPublished,
+  // Exposed so the frontend can detect when a logged-in user is the creator
+  // and show the appropriate blocked-voter UI without an extra round-trip.
+  createdBy: poll.createdBy,
   questions: poll.questions.map((q) => ({
     questionId: q.questionId,
     text: q.text,

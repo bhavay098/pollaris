@@ -99,6 +99,10 @@ const pollSchema = new mongoose.Schema(
       type: Date,
       default: null, // Populated at the moment of first publish
     },
+    resultsPublished: {
+      type: Boolean,
+      default: false, // When true, the public page shows the results readout instead of the voting form
+    },
     questions: {
       type: [questionSchema],
       validate: {

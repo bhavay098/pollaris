@@ -11,6 +11,8 @@ import {
   deletePoll,
   publishPoll,
   unpublishPoll,
+  publishResults,
+  unpublishResults,
   getAnalyticsSummary,
   getAnalyticsQuestions,
   getAnalyticsParticipation,
@@ -28,6 +30,8 @@ router.patch("/:pollId", updatePoll);
 router.delete("/:pollId", deletePoll);
 router.post("/:pollId/publish", publishPoll);
 router.post("/:pollId/unpublish", unpublishPoll);
+router.post("/:pollId/publish-results", publishResults);
+router.post("/:pollId/unpublish-results", unpublishResults);
 
 // Analytics sub-resources for a single poll
 router.get("/:pollId/analytics/summary", getAnalyticsSummary);

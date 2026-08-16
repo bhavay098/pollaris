@@ -39,7 +39,7 @@ export default function Hero() {
   const authTarget = user ? "/dashboard" : "/login";
 
   return (
-    <section className="max-w-7xl mx-auto px-6 pt-36 pb-24">
+    <section className="max-w-7xl mx-auto px-6 pt-24 md:pt-36 pb-12 md:pb-24">
       <div className="grid lg:grid-cols-2 gap-20 items-center">
         <div>
           <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-teal-400/20 bg-teal-400/[0.07]">
@@ -49,12 +49,12 @@ export default function Hero() {
             </span>
           </div>
           <h2 className="home-hero-title mt-7 font-bold leading-[0.98] tracking-[-0.03em]">
-            Polling
-            <br />
+            Polling{" "}
+            <br className="hidden sm:block" />
             <span className="text-teal-400">
               Reimagined
-            </span>
-            <br />
+            </span>{" "}
+            <br className="hidden sm:block" />
             In Real Time.
           </h2>
           <p className="mt-7 text-base leading-relaxed text-zinc-400 max-w-lg">
@@ -62,15 +62,15 @@ export default function Hero() {
             participation analytics, and publish realtime insights through a
             modern collaborative platform.
           </p>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <ActionButton as={Link} to={authTarget} className="px-7 py-3.5">
+          <div className="mt-10 flex flex-col sm:flex-row flex-wrap gap-4">
+            <ActionButton as={Link} to={authTarget} className="w-full sm:w-auto px-7 py-3.5 justify-center">
               Launch Poll
             </ActionButton>
-            <ActionButton as={Link} to={authTarget} variant="secondary" className="px-7 py-3.5">
+            <ActionButton as={Link} to={authTarget} variant="secondary" className="w-full sm:w-auto px-7 py-3.5 justify-center">
               Login
             </ActionButton>
           </div>
-          <div className="mt-14 grid grid-cols-3 gap-4">
+          <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4">
             {stats.map((item) => (
               <div
                 key={item.label}
@@ -121,7 +121,7 @@ export default function Hero() {
                   </div>
                 </div>
               ))}
-              <div className="grid grid-cols-2 gap-4 pt-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
                 <div className="rounded-2xl border border-white/8 bg-white/3 p-5">
                   <p className="text-[10px] uppercase tracking-[0.12em] text-zinc-500 font-medium">
                     Votes cast

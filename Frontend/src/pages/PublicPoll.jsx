@@ -18,6 +18,7 @@ export default function PublicPoll() {
   // submitted/message/error tracks the form submission result.
   const [status, setStatus] = useState({ submitted: false, message: "", error: "" });
   const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState(null);
 
   // True once the poll's expiry date has passed (disables submitting).
   const isExpired = useMemo(() => {
@@ -29,9 +30,16 @@ export default function PublicPoll() {
   const loadPoll = useCallback(async () => {
     try {
       const response = await api.getPublicPoll(slug);
+      if (response.data.poll.resultsPublished) {
+        const resultRes = await api.getPublicResults(slug);
+        setResults(resultRes.data);
+      } else {
+        setResults(null);
+      }
       setPoll(response.data.poll);
     } catch (err) {
       setPoll(null);
+      setResults(null);
       setStatus((prev) => ({ ...prev, error: err.message }));
     } finally {
       setLoading(false);
@@ -49,6 +57,16 @@ export default function PublicPoll() {
     socket.connect();
     socket.emit("poll:join_public", { slug });
 
+    const onRealtime = async () => {
+      if (poll?.resultsPublished) {
+        const resultRes = await api.getPublicResults(slug);
+        setResults(resultRes.data);
+      }
+    };
+
+    socket.on("analytics:response_received", onRealtime);
+    socket.on("analytics:question_updated", onRealtime);
+
     const onStatusChanged = () => {
       void loadPoll();
     };
@@ -56,10 +74,12 @@ export default function PublicPoll() {
 
     // Cleanup on unmount: remove listeners and close the socket.
     return () => {
+      socket.off("analytics:response_received", onRealtime);
+      socket.off("analytics:question_updated", onRealtime);
       socket.off("poll:status_changed", onStatusChanged);
       socket.disconnect();
     };
-  }, [loadPoll, slug]);
+  }, [loadPoll, poll?.resultsPublished, slug]);
 
   // Convert the answers map {questionId: optionId} into the array shape the
   // backend expects, then POST it.
@@ -89,6 +109,35 @@ export default function PublicPoll() {
     return <AppShell><div className="alert alert-error" role="alert">{status.error}</div></AppShell>;
   }
 
+  // Published results view: no form, just the final numbers.
+  if (poll?.resultsPublished && results) {
+    return (
+      <AppShell>
+        <section className="public-hero">
+          <span className="eyebrow">Published readout</span>
+          <h1 className="page-title">{results.poll.title}</h1>
+          <div className="public-meta"><span>{results.totalResponses} total responses</span><span>Results are now public</span></div>
+        </section>
+        <div className="analytics-stack" style={{ marginTop: "14px" }}>
+          {results.questionWise.map((q) => (
+            <section key={q.questionId} className="panel">
+              <h2 className="panel-title">{q.text}</h2>
+              <div style={{ marginTop: "18px" }}>
+                {q.options.map((opt) => (
+                  <div key={opt.optionId} className="result-row">
+                    <span>{opt.text}</span>
+                    <div className="result-track" aria-hidden="true"><div className="result-fill" style={{ width: `${opt.percentage}%` }} /></div>
+                    <span className="result-value">{opt.count} · {opt.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </AppShell>
+    );
+  }
+
   // Auth-gated poll: logged-out visitors get a "login required" screen.
   if (poll.responseMode === "AUTHENTICATED" && !user) {
     return (
@@ -99,6 +148,36 @@ export default function PublicPoll() {
             <h1>Login required</h1>
             <p className="page-description" style={{ marginInline: "auto" }}>This poll accepts authenticated responses only. Sign in to share your answer.</p>
             <Link className="btn btn-primary" to="/login" style={{ marginTop: "22px" }}>Go to login</Link>
+          </section>
+        </div>
+      </AppShell>
+    );
+  }
+
+  // Prevent creator from answering their own poll
+  if (user?.id === poll.createdBy) {
+    return (
+      <AppShell>
+        <div className="auth-layout" style={{ minHeight: "calc(100dvh - 220px)", gridTemplateColumns: "1fr" }}>
+          <section className="auth-card" style={{ maxWidth: "560px", margin: "auto", textAlign: "center" }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "rgba(100, 255, 218, 0.1)", color: "var(--app-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </div>
+            </div>
+            <span className="eyebrow">Owner View</span>
+            <h1 style={{ marginTop: "8px", marginBottom: "16px" }}>You own this poll</h1>
+            <p className="page-description" style={{ marginInline: "auto", fontSize: "16px", lineHeight: "1.6" }}>
+              To ensure the integrity of the results, poll creators cannot submit responses to their own polls. You can view the live results on your analytics dashboard.
+            </p>
+            <div style={{ marginTop: "32px" }}>
+              <Link className="btn btn-primary" to={`/dashboard/polls/${poll.id}/analytics`}>
+                View live analytics
+              </Link>
+            </div>
           </section>
         </div>
       </AppShell>

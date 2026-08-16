@@ -57,6 +57,12 @@ const api = {
   unpublishPoll: (pollId) =>
     request(`/polls/${pollId}/unpublish`, { method: "POST" }),
 
+  publishResults: (pollId) =>
+    request(`/polls/${pollId}/publish-results`, { method: "POST" }),
+
+  unpublishResults: (pollId) =>
+    request(`/polls/${pollId}/unpublish-results`, { method: "POST" }),
+
   // --- Analytics (authenticated poll owners) ---
   analyticsSummary: (pollId) => request(`/polls/${pollId}/analytics/summary`),
 

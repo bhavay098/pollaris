@@ -63,6 +63,7 @@ const getMyPolls = async (req, res, next) => {
           responseMode: 1,
           expiresAt: 1,
           isPublished: 1,
+          resultsPublished: 1,
           createdAt: 1,
           updatedAt: 1,
           totalResponses: { $size: "$responses" },
@@ -245,6 +246,65 @@ const unpublishPoll = async (req, res, next) => {
   }
 };
 
+// POST /polls/:pollId/publish-results — make the results readout public without
+// closing the poll. Respondents who visit after this point see the results view.
+const publishResults = async (req, res, next) => {
+  try {
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+
+    if (!poll) {
+      throw ApiError.notFound("Poll not found");
+    }
+
+    if (!poll.isPublished) {
+      throw ApiError.conflict("Publish the poll before revealing its results");
+    }
+
+    if (poll.resultsPublished) {
+      throw ApiError.conflict("Results are already published");
+    }
+
+    poll.resultsPublished = true;
+    await poll.save();
+
+    const io = getIO();
+    const payload = { pollId: String(poll._id), resultsPublished: true };
+    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", payload);
+    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", payload);
+
+    return ApiResponse.ok(res, "Results published successfully", { poll });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /polls/:pollId/unpublish-results — revert the public page back to the voting form.
+const unpublishResults = async (req, res, next) => {
+  try {
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+
+    if (!poll) {
+      throw ApiError.notFound("Poll not found");
+    }
+
+    if (!poll.resultsPublished) {
+      throw ApiError.conflict("Results are not currently published");
+    }
+
+    poll.resultsPublished = false;
+    await poll.save();
+
+    const io = getIO();
+    const payload = { pollId: String(poll._id), resultsPublished: false };
+    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", payload);
+    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", payload);
+
+    return ApiResponse.ok(res, "Results unpublished successfully", { poll });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /polls/:pollId/analytics/summary — high-level participation stats.
 const getAnalyticsSummary = async (req, res, next) => {
   try {
@@ -328,6 +388,8 @@ export {
   deletePoll,
   publishPoll,
   unpublishPoll,
+  publishResults,
+  unpublishResults,
   getAnalyticsSummary,
   getAnalyticsQuestions,
   getAnalyticsParticipation,

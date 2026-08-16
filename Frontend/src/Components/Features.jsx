@@ -33,15 +33,15 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="max-w-7xl mx-auto px-6 pb-24">
-      <div className="h-px bg-white/10 mb-24" />
+    <section id="features" className="max-w-7xl mx-auto px-6 pb-12 md:pb-24">
+      <div className="h-px bg-white/10 mb-12 md:mb-24" />
       <div className="text-center max-w-3xl mx-auto">
         <p className="text-xs uppercase tracking-[0.12em] text-teal-400 font-semibold">
           Platform Features
         </p>
         <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
-          Designed for modern
-          <br />
+          Designed for modern{" "}
+          <br className="hidden sm:block" />
           realtime engagement.
         </h3>
         <p className="mt-6 text-zinc-400 text-base leading-relaxed">

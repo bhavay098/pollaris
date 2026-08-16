@@ -12,6 +12,8 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [publishingId, setPublishingId] = useState(null);
   const [unpublishingId, setUnpublishingId] = useState(null);
+  const [publishingResultsId, setPublishingResultsId] = useState(null);
+  const [unpublishingResultsId, setUnpublishingResultsId] = useState(null);
   const [sharingId, setSharingId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -64,13 +66,49 @@ export default function Dashboard() {
       await api.unpublishPoll(pollId);
       setPolls((currentPolls) =>
         currentPolls.map((poll) =>
-          poll.id === pollId ? { ...poll, isPublished: false } : poll,
+          poll.id === pollId ? { ...poll, isPublished: false, resultsPublished: false } : poll,
         ),
       );
     } catch (err) {
       setError(err.message);
     } finally {
       setUnpublishingId(null);
+    }
+  };
+
+  const publishResults = async (pollId) => {
+    setError("");
+    setPublishingResultsId(pollId);
+
+    try {
+      await api.publishResults(pollId);
+      setPolls((currentPolls) =>
+        currentPolls.map((poll) =>
+          poll.id === pollId ? { ...poll, resultsPublished: true } : poll,
+        ),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPublishingResultsId(null);
+    }
+  };
+
+  const unpublishResults = async (pollId) => {
+    setError("");
+    setUnpublishingResultsId(pollId);
+
+    try {
+      await api.unpublishResults(pollId);
+      setPolls((currentPolls) =>
+        currentPolls.map((poll) =>
+          poll.id === pollId ? { ...poll, resultsPublished: false } : poll,
+        ),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUnpublishingResultsId(null);
     }
   };
 
@@ -164,9 +202,20 @@ export default function Dashboard() {
                     {publishingId === poll.id ? "Publishing…" : "Publish poll"}
                   </button>
                 ) : (
-                  <button className="btn btn-secondary" type="button" disabled={unpublishingId === poll.id} onClick={() => void unpublishPoll(poll.id)}>
-                    {unpublishingId === poll.id ? "Unpublishing…" : "Unpublish"}
-                  </button>
+                  <>
+                    <button className="btn btn-secondary" type="button" disabled={unpublishingId === poll.id} onClick={() => void unpublishPoll(poll.id)}>
+                      {unpublishingId === poll.id ? "Unpublishing…" : "Unpublish poll"}
+                    </button>
+                    {!poll.resultsPublished ? (
+                      <button className="btn btn-primary" type="button" disabled={publishingResultsId === poll.id} onClick={() => void publishResults(poll.id)}>
+                        {publishingResultsId === poll.id ? "Publishing results…" : "Publish results"}
+                      </button>
+                    ) : (
+                      <button className="btn btn-secondary" type="button" disabled={unpublishingResultsId === poll.id} onClick={() => void unpublishResults(poll.id)}>
+                        {unpublishingResultsId === poll.id ? "Unpublishing results…" : "Unpublish results"}
+                      </button>
+                    )}
+                  </>
                 )}
                 <button className="btn btn-secondary btn-danger" type="button" disabled={deletingId === poll.id} onClick={() => void deletePoll(poll)}>
                   {deletingId === poll.id ? "Deleting…" : "Delete"}

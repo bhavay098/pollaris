@@ -32,16 +32,16 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section id="about" className="max-w-6xl mx-auto px-6 pb-28">
-      <div className="h-px bg-white/10 mb-24" />
+    <section id="about" className="max-w-6xl mx-auto px-6 pb-12 md:pb-28">
+      <div className="h-px bg-white/10 mb-12 md:mb-24" />
       <div className="text-center max-w-3xl mx-auto mb-16">
         <p className="text-xs uppercase tracking-[0.12em] text-sky-400 font-semibold">
           Testimonials
         </p>
         <h3 className="mt-5 text-4xl md:text-5xl font-bold tracking-[-0.025em] leading-[1.08]">
-          Loved by teams
-          <br />
-          at leading companies.
+          Loved by teams who value{" "}
+          <br className="hidden sm:block" />
+          fast, clear decisions.
         </h3>
       </div>
       <div className="grid md:grid-cols-3 gap-6">

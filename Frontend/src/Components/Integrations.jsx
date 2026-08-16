@@ -11,9 +11,9 @@ const integrations = [
 
 export default function Integrations() {
   return (
-    <section className="max-w-6xl mx-auto px-6 pb-28">
-      <div className="h-px bg-white/10 mb-24" />
-      <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-zinc-800/50 p-12">
+    <section className="max-w-6xl mx-auto px-6 pb-12 md:pb-28">
+      <div className="h-px bg-white/10 mb-12 md:mb-24" />
+      <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-zinc-800/50 p-8 md:p-12">
         <div className="relative text-center mb-12">
           <p className="text-xs uppercase tracking-[0.12em] text-teal-400 font-semibold">
             Integrations
@@ -25,18 +25,18 @@ export default function Integrations() {
             Connect Pollaris with the tools you already use.
           </p>
         </div>
-        <div className="relative flex flex-wrap justify-center gap-4">
+        <div className="relative grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 sm:gap-4">
           {integrations.map((item) => (
             <div
               key={item.name}
             >
-              <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl border border-white/8 bg-white/4 backdrop-blur-xl cursor-pointer hover:border-white/15">
+              <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border border-white/8 bg-white/4 backdrop-blur-xl cursor-pointer hover:border-white/15">
                 <div
-                  className={`w-8 h-8 rounded-xl ${item.color} flex items-center justify-center text-sm font-semibold text-white`}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ${item.color} flex items-center justify-center text-sm font-semibold text-white`}
                 >
                   {item.icon}
                 </div>
-                <span className="text-sm font-semibold text-zinc-200">
+                <span className="text-xs sm:text-sm font-semibold text-zinc-200">
                   {item.name}
                 </span>
               </div>
