@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import AppShell from "../Components/AppShell.jsx";
 import { useAuthStore } from "../store/auth-store";
 import { authClient } from "../lib/auth-client";
+import Button from "../Components/ui/Button.jsx";
+import Input from "../Components/ui/Input.jsx";
+import { Card, CardHeader, CardTitle, CardEyebrow, CardContent } from "../Components/ui/Card.jsx";
 
 export default function Settings() {
   const { user } = useAuthStore();
@@ -90,65 +93,62 @@ export default function Settings() {
       </div>
 
       <div className="builder-grid">
-        <section className="panel builder-details" aria-labelledby="profile-heading">
-          <div className="panel-heading">
-            <div>
-              <span className="eyebrow">Personal Info</span>
-              <h2 id="profile-heading" className="panel-title">Profile</h2>
-            </div>
-          </div>
-          <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
-            <div className="field">
-              <label htmlFor="name">Display Name</label>
-              <input
+        <Card className="builder-details" aria-labelledby="profile-heading">
+          <CardHeader>
+            <CardEyebrow>Personal Info</CardEyebrow>
+            <CardTitle id="profile-heading">Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
+              <Input
                 id="name"
+                label="Display Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
                 placeholder="Your name"
               />
-            </div>
-            <div className="field">
-              <label htmlFor="email">Email</label>
-              <input
+              <Input
                 id="email"
+                label="Email"
                 value={user?.email || ""}
                 disabled
                 className="opacity-60 cursor-not-allowed"
                 title="Email cannot be changed"
               />
-            </div>
-            <div className="button-row" style={{ marginTop: "1rem" }}>
-              <button type="submit" className="btn btn-primary" disabled={isUpdatingProfile || name === user?.name}>
-                {isUpdatingProfile ? "Saving…" : "Save profile"}
-              </button>
-            </div>
-          </form>
-        </section>
+              <div className="button-row" style={{ marginTop: "1rem" }}>
+                <Button 
+                  type="submit" 
+                  isLoading={isUpdatingProfile} 
+                  loadingText="Saving…"
+                  disabled={name === user?.name}
+                >
+                  Save profile
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
-        <section className="panel builder-details" aria-labelledby="security-heading">
-          <div className="panel-heading">
-            <div>
-              <span className="eyebrow">Security</span>
-              <h2 id="security-heading" className="panel-title">Password</h2>
-            </div>
-          </div>
-          <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-            <div className="field">
-              <label htmlFor="current-password">Current Password</label>
-              <input
+        <Card className="builder-details" aria-labelledby="security-heading">
+          <CardHeader>
+            <CardEyebrow>Security</CardEyebrow>
+            <CardTitle id="security-heading">Password</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+              <Input
                 id="current-password"
+                label="Current Password"
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
                 placeholder="Enter current password"
               />
-            </div>
-            <div className="field">
-              <label htmlFor="new-password">New Password</label>
-              <input
+              <Input
                 id="new-password"
+                label="New Password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -156,36 +156,41 @@ export default function Settings() {
                 placeholder="Enter new password"
                 minLength={8}
               />
-            </div>
-            <div className="button-row" style={{ marginTop: "1rem" }}>
-              <button type="submit" className="btn btn-primary" disabled={isUpdatingPassword || !currentPassword || !newPassword}>
-                {isUpdatingPassword ? "Updating…" : "Update password"}
-              </button>
-            </div>
-          </form>
-        </section>
+              <div className="button-row" style={{ marginTop: "1rem" }}>
+                <Button 
+                  type="submit" 
+                  isLoading={isUpdatingPassword} 
+                  loadingText="Updating…"
+                  disabled={!currentPassword || !newPassword}
+                >
+                  Update password
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
-        <section className="panel builder-details border-red-500/20" aria-labelledby="danger-heading">
-          <div className="panel-heading">
-            <div>
-              <span className="eyebrow text-red-500">Danger Zone</span>
-              <h2 id="danger-heading" className="panel-title">Delete Account</h2>
+        <Card className="builder-details border-red-500/20" aria-labelledby="danger-heading">
+          <CardHeader>
+            <CardEyebrow className="text-red-500">Danger Zone</CardEyebrow>
+            <CardTitle id="danger-heading">Delete Account</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+              Once you delete your account, there is no going back. All of your polls and responses will be permanently deleted. Please be certain.
+            </p>
+            <div className="button-row">
+              <Button 
+                variant="danger"
+                onClick={handleDeleteAccount}
+                isLoading={isDeleting}
+                loadingText="Deleting…"
+              >
+                Delete my account
+              </Button>
             </div>
-          </div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-            Once you delete your account, there is no going back. All of your polls and responses will be permanently deleted. Please be certain.
-          </p>
-          <div className="button-row">
-            <button 
-              type="button" 
-              className="btn btn-danger" 
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting…" : "Delete my account"}
-            </button>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       </div>
     </AppShell>
   );

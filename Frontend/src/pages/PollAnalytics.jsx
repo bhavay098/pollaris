@@ -8,6 +8,7 @@ import api from "../lib/api";
 import socket from "../lib/socket";
 import AppShell from "../Components/AppShell.jsx";
 import { toast } from "sonner";
+import Skeleton from "../Components/ui/Skeleton.jsx";
 
 export default function PollAnalytics() {
   const { pollId } = useParams();
@@ -126,7 +127,16 @@ export default function PollAnalytics() {
           <div className="stat-card"><span className="stat-label">Authenticated</span><strong className="stat-value">{summary.participantBreakdown.authenticated}</strong></div>
           <div className="stat-card"><span className="stat-label">Publication</span><strong className={`stat-value ${summary.isPublished ? "success" : "accent"}`}>{summary.isPublished ? "Live" : "Draft"}</strong></div>
         </div>
-      ) : <div className="panel muted">Loading analytics…</div>}
+      ) : (
+        <div className="stat-grid" aria-label="Loading analytics summary">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="stat-card">
+              <Skeleton className="h-3 w-20 mb-5" />
+              <Skeleton className="h-9 w-16 mt-4" />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="analytics-stack">
         <section className="panel" aria-labelledby="question-counts-heading">
@@ -134,8 +144,20 @@ export default function PollAnalytics() {
             <div><span className="eyebrow">Response pattern</span><h2 id="question-counts-heading" className="panel-title">Question-wise option counts</h2></div>
             <span className="meta-label">Updates live</span>
           </div>
-          {questions.length === 0 ? <p className="panel-copy">No response data yet. Your first answer will appear here.</p> : null}
-          {questions.map((q) => {
+          {!summary ? (
+            <div className="mt-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="analytics-question">
+                  <Skeleton className="h-5 w-2/3 max-w-sm mb-4" />
+                  <div className="flex flex-col gap-3 mt-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : questions.length === 0 ? <p className="panel-copy">No response data yet. Your first answer will appear here.</p> : null}
+          {summary && questions.map((q) => {
             const totalVotes = q.options.reduce((total, option) => total + option.count, 0);
             return (
               <div key={q.questionId} className="analytics-question">
@@ -161,8 +183,19 @@ export default function PollAnalytics() {
           <div className="panel-heading">
             <div><span className="eyebrow">Participation</span><h2 id="participation-heading" className="panel-title">Where attention drops</h2></div>
           </div>
-          {participation.length === 0 ? <p className="panel-copy">Participation insights will appear after responses come in.</p> : null}
-          {participation.map((item) => (
+          {!summary ? (
+            <div className="mt-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="analytics-question">
+                  <div className="panel-heading">
+                    <Skeleton className="h-4 w-1/2 max-w-xs" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : participation.length === 0 ? <p className="panel-copy">Participation insights will appear after responses come in.</p> : null}
+          {summary && participation.map((item) => (
             <div key={item.questionId} className="analytics-question">
               <div className="panel-heading">
                 <span className="panel-copy">{item.text}</span>

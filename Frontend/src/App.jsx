@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import PollBuilder from "./pages/PollBuilder";
 import PollAnalytics from "./pages/PollAnalytics";
 import PublicPoll from "./pages/PublicPoll";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import GuestRoute from "./Components/GuestRoute";
 import AuthTimeoutManager from "./Components/AuthTimeoutManager";
@@ -81,8 +82,8 @@ function App() {
         {/* Public shareable poll: anyone can visit /p/<slug> without logging in */}
         <Route path="/p/:slug" element={<PublicPoll />} />
 
-        {/* Any unknown URL redirects back to the home page */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Any unknown URL shows the 404 page */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
     </ErrorBoundary>

@@ -6,6 +6,7 @@ import api from "../lib/api";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
 import { toast } from "sonner";
+import Skeleton from "../Components/ui/Skeleton.jsx";
 
 export default function Dashboard() {
   // The current user's list of polls.
@@ -182,7 +183,29 @@ export default function Dashboard() {
         <div className="stat-card"><span className="stat-label">Mode</span><strong className="stat-value accent">Live</strong></div>
       </div>
 
-      {loading ? <div className="panel muted">Syncing your poll space…</div> : null}
+      {loading ? (
+        <div className="poll-list">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="poll-card">
+              <div className="card-heading">
+                <div style={{ flex: 1 }}>
+                  <Skeleton className="h-6 w-3/4 max-w-sm mb-3" />
+                  <Skeleton className="h-4 w-1/4 max-w-xs" />
+                </div>
+                <div className="poll-meta" style={{ flex: 1, justifyContent: "flex-end" }}>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-20" style={{ borderRadius: "999px" }} />
+                </div>
+              </div>
+              <div className="card-actions" style={{ marginTop: "24px" }}>
+                <Skeleton className="h-11 w-24" style={{ borderRadius: "12px" }} />
+                <Skeleton className="h-11 w-32" style={{ borderRadius: "12px" }} />
+                <Skeleton className="h-11 w-32" style={{ borderRadius: "12px" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {!loading && polls.length > 0 ? (
         <div className="poll-list">

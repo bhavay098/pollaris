@@ -158,6 +158,16 @@ html[data-theme="light"] .app-shell {
 .alert-error { border-color: color-mix(in srgb, var(--app-danger) 42%, transparent); background: color-mix(in srgb, var(--app-danger) 9%, transparent); color: var(--app-danger); }
 .alert-success { border-color: color-mix(in srgb, var(--app-success) 40%, transparent); background: color-mix(in srgb, var(--app-success) 9%, transparent); color: var(--app-success); }
 
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.skeleton {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: var(--app-border-strong);
+  border-radius: 8px;
+}
+
 .field { display: grid; gap: 7px; }
 .field label, .field legend { color: var(--app-muted); font-size: 12px; font-weight: 600; }
 .field input, .field select, .field textarea { width: 100%; min-height: 46px; border: 1px solid var(--app-border); border-radius: 12px; outline: none; background: color-mix(in srgb, var(--app-bg) 58%, var(--app-surface-solid)); color: var(--app-text); padding: 0 13px; transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease; }
