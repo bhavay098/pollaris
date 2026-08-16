@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./common/config/auth.js";
+import { rateLimit } from "express-rate-limit";
 import pollsRoutes from "./modules/polls/polls.routes.js";
 import publicRoutes from "./modules/public/public.routes.js";
 import ApiError from "./common/utils/api-error.js";
@@ -19,8 +20,30 @@ app.use(
   }),
 );
 
+// Set up rate limiters
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 200, // Limit each IP to 200 requests per `window` (here, per 15 minutes).
+  standardHeaders: "draft-8", 
+  legacyHeaders: false, 
+  message: { success: false, message: "Too many requests, please try again later." },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  limit: 20, // Limit each IP to 20 auth requests per hour
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { success: false, message: "Too many authentication attempts, please try again later." },
+});
+
+// Apply global rate limiter
+app.use(globalLimiter);
+
 // Better Auth must receive the raw request body before Express parses JSON.
+app.use("/api/auth", authLimiter);
 app.all("/api/auth/*splat", toNodeHandler(auth));
+
 app.use(express.json());
 
 // Mount feature routers on their API prefixes.

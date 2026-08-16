@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../lib/api";
 import AppShell from "../Components/AppShell.jsx";
+import { toast } from "sonner";
 
 // Factory that returns a fresh, empty question with two blank options.
 // IDs are generated with a timestamp + random suffix so each is unique.
@@ -42,7 +43,6 @@ export default function PollBuilder() {
     expiryTime: "",
     questions: [blankQuestion()],
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   // e.g. "Asia/Kolkata" — shown as a hint so users know expiry uses local time.
@@ -77,7 +77,7 @@ export default function PollBuilder() {
           });
         }
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) toast.error(err.message);
       }
     };
 
@@ -148,7 +148,6 @@ export default function PollBuilder() {
   // Save: POST for new polls, PATCH for edits, then return to the dashboard.
   const submit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     // Recombine the split date + time inputs into the ISO-style string the
@@ -167,9 +166,10 @@ export default function PollBuilder() {
       } else {
         await api.createPoll(payload);
       }
+      toast.success(isEdit ? "Poll updated successfully!" : "Poll created successfully!");
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -255,7 +255,6 @@ export default function PollBuilder() {
           </section>
         ))}
 
-        {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
         <div className="button-row">
           <button type="button" className="btn btn-secondary" onClick={addQuestion}>+ Add question</button>
           <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Saving…" : isEdit ? "Save changes" : "Create poll"}</button>

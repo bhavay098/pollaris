@@ -7,12 +7,14 @@ import AppShell from "../Components/AppShell.jsx";
 import GoogleIcon from "../Components/ui/GoogleIcon.jsx";
 
 export default function Register() {
+  // Single state object for the three form fields.
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register, loginWithGoogle } = useAuthStore();
   const navigate = useNavigate();
 
+  // Email/password signup: create the account, then go straight to the dashboard.
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -21,12 +23,14 @@ export default function Register() {
       await register(form);
       navigate("/dashboard");
     } catch (err) {
+      // Keep the user on the form and show why registration failed.
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Google signup: redirects to Google; on failure we stay and show the error.
   const onGoogleSignup = async () => {
     setError("");
     setLoading(true);

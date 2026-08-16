@@ -5,21 +5,24 @@ import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
+import { toast } from "sonner";
 
 export default function Dashboard() {
+  // The current user's list of polls.
   const [polls, setPolls] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Track WHICH poll each async action is running on so the right button can
+  // show a loading state and be disabled while its request is in flight.
   const [publishingId, setPublishingId] = useState(null);
   const [unpublishingId, setUnpublishingId] = useState(null);
   const [publishingResultsId, setPublishingResultsId] = useState(null);
   const [unpublishingResultsId, setUnpublishingResultsId] = useState(null);
   const [sharingId, setSharingId] = useState(null);
-  const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const { user } = useAuthStore();
 
-  // Load polls once when the page mounts.
+  // Load polls once when the page mounts. `cancelled` guards against calling
+  // setState after unmount (React warning + memory leak).
   useEffect(() => {
     let cancelled = false;
 
@@ -28,7 +31,7 @@ export default function Dashboard() {
         const response = await api.getMyPolls();
         if (!cancelled) setPolls(response.data.polls);
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) toast.error(err.message);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -40,8 +43,9 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Toggle a poll from draft -> published. Updates the local list optimistically
+  // so the UI reflects the new state without a refetch.
   const publishPoll = async (pollId) => {
-    setError("");
     setPublishingId(pollId);
 
     try {
@@ -51,15 +55,17 @@ export default function Dashboard() {
           poll.id === pollId ? { ...poll, isPublished: true } : poll,
         ),
       );
+      toast.success("Poll published!");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setPublishingId(null);
     }
   };
 
+  // Unpublish a poll: makes the public link stop accepting responses and also
+  // hides published results (both flags are reset to false).
   const unpublishPoll = async (pollId) => {
-    setError("");
     setUnpublishingId(pollId);
 
     try {
@@ -69,15 +75,16 @@ export default function Dashboard() {
           poll.id === pollId ? { ...poll, isPublished: false, resultsPublished: false } : poll,
         ),
       );
+      toast.success("Poll unpublished!");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setUnpublishingId(null);
     }
   };
 
+  // Publish the final results so the public link shows the outcome summary.
   const publishResults = async (pollId) => {
-    setError("");
     setPublishingResultsId(pollId);
 
     try {
@@ -87,15 +94,16 @@ export default function Dashboard() {
           poll.id === pollId ? { ...poll, resultsPublished: true } : poll,
         ),
       );
+      toast.success("Results published!");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setPublishingResultsId(null);
     }
   };
 
+  // Hide the published results again (poll keeps accepting responses).
   const unpublishResults = async (pollId) => {
-    setError("");
     setUnpublishingResultsId(pollId);
 
     try {
@@ -105,16 +113,18 @@ export default function Dashboard() {
           poll.id === pollId ? { ...poll, resultsPublished: false } : poll,
         ),
       );
+      toast.success("Results unpublished!");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setUnpublishingResultsId(null);
     }
   };
 
+  // Share the public poll URL: uses the native share sheet on mobile where
+  // available, otherwise falls back to copying the link to the clipboard.
   const sharePoll = async (poll) => {
     const publicUrl = `${window.location.origin}/p/${poll.slug}`;
-    setError("");
     setSharingId(poll.id);
 
     try {
@@ -122,21 +132,20 @@ export default function Dashboard() {
         await navigator.share({ title: poll.title, url: publicUrl });
       } else {
         await navigator.clipboard.writeText(publicUrl);
-        setCopiedId(poll.id);
-        setTimeout(() => setCopiedId((prev) => (prev === poll.id ? null : prev)), 2500);
+        toast.success("Link copied to clipboard!");
       }
     } catch (err) {
       // Closing the native share sheet is not an error.
-      if (err?.name !== "AbortError") setError("Unable to share the poll link");
+      if (err?.name !== "AbortError") toast.error("Unable to share the poll link");
     } finally {
       setSharingId(null);
     }
   };
 
+  // Delete a poll after a confirmation dialog; removes it from the local list.
   const deletePoll = async (poll) => {
     if (!window.confirm(`Delete "${poll.title}"? This cannot be undone.`)) return;
 
-    setError("");
     setDeletingId(poll.id);
 
     try {
@@ -144,8 +153,9 @@ export default function Dashboard() {
       setPolls((currentPolls) =>
         currentPolls.filter((item) => item.id !== poll.id),
       );
+      toast.success("Poll deleted.");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setDeletingId(null);
     }
@@ -164,6 +174,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Summary stats computed from the loaded polls. */}
       <div className="stat-grid" aria-label="Poll overview">
         <div className="stat-card"><span className="stat-label">Polls in space</span><strong className="stat-value">{polls.length}</strong></div>
         <div className="stat-card"><span className="stat-label">Live now</span><strong className="stat-value success">{polls.filter((poll) => poll.isPublished).length}</strong></div>
@@ -172,12 +183,12 @@ export default function Dashboard() {
       </div>
 
       {loading ? <div className="panel muted">Syncing your poll space…</div> : null}
-      {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
 
       {!loading && polls.length > 0 ? (
         <div className="poll-list">
           {polls.map((poll) => (
             <article key={poll.id} className="poll-card">
+              {/* Header: poll title/slug and response count + publish status. */}
               <div className="card-heading">
                 <div>
                   <h2 className="poll-card-title">{poll.title}</h2>
@@ -221,7 +232,6 @@ export default function Dashboard() {
                   {deletingId === poll.id ? "Deleting…" : "Delete"}
                 </button>
               </div>
-              {copiedId === poll.id ? <p className="alert alert-success" style={{ marginTop: "12px" }}>Link copied to clipboard</p> : null}
             </article>
           ))}
         </div>

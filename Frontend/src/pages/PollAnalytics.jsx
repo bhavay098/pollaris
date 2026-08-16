@@ -7,13 +7,13 @@ import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
 import AppShell from "../Components/AppShell.jsx";
+import { toast } from "sonner";
 
 export default function PollAnalytics() {
   const { pollId } = useParams();
   const [summary, setSummary] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [participation, setParticipation] = useState([]);
-  const [error, setError] = useState("");
   const loadAllRef = useRef(() => {});
 
   // Fetch all three analytics endpoints in parallel.
@@ -41,7 +41,7 @@ export default function PollAnalytics() {
     try {
       applyAnalytics(await fetchAll());
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   }, [fetchAll]);
 
@@ -58,7 +58,7 @@ export default function PollAnalytics() {
         const data = await fetchAll();
         if (!cancelled) applyAnalytics(data);
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) toast.error(err.message);
       }
     };
 
@@ -96,8 +96,9 @@ export default function PollAnalytics() {
     try {
       await api.publishPoll(pollId);
       await loadAll();
+      toast.success("Poll published successfully!");
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -111,8 +112,6 @@ export default function PollAnalytics() {
         </div>
         <Link to="/dashboard" className="btn btn-quiet">Back to dashboard</Link>
       </div>
-
-      {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
 
       {summary && !summary.isPublished ? (
         <div className="alert" style={{ borderColor: "color-mix(in srgb, var(--app-accent) 45%, transparent)", background: "color-mix(in srgb, var(--app-accent) 9%, transparent)", color: "var(--app-accent)" }}>

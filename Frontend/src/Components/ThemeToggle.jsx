@@ -1,5 +1,9 @@
+// ThemeToggle: the button in the navbar/topbar that switches between light
+// and dark mode. Shows a sun when it's dark (click to go light) and a moon
+// when it's light, so the icon always hints at what happens next.
 import { useTheme } from "./use-theme.js";
 
+// Decorative sun icon shown while the app is in dark mode.
 function SunIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon">
@@ -9,6 +13,7 @@ function SunIcon() {
   );
 }
 
+// Decorative moon icon shown while the app is in light mode.
 function MoonIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="theme-icon">
@@ -19,6 +24,7 @@ function MoonIcon() {
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  // Icon shows the mode we'd switch INTO (moon while light, sun while dark).
   const nextTheme = theme === "dark" ? "light" : "dark";
 
   return (

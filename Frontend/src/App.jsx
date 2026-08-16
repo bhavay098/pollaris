@@ -5,17 +5,29 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 import PollBuilder from "./pages/PollBuilder";
 import PollAnalytics from "./pages/PollAnalytics";
 import PublicPoll from "./pages/PublicPoll";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import GuestRoute from "./Components/GuestRoute";
 import AuthTimeoutManager from "./Components/AuthTimeoutManager";
+import { ErrorBoundary } from "react-error-boundary";
+import { Toaster } from "sonner";
+import GlobalErrorFallback from "./Components/GlobalErrorFallback";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthTimeoutManager />
+    <ErrorBoundary
+      FallbackComponent={GlobalErrorFallback}
+      onReset={() => {
+        // Reset the state of your app here if needed
+        window.location.reload();
+      }}
+    >
+      <BrowserRouter>
+        <Toaster position="bottom-right" richColors />
+        <AuthTimeoutManager />
       <Routes>
         {/* Public marketing page */}
         <Route path="/" element={<Home />} />
@@ -29,6 +41,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />
@@ -65,6 +85,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
