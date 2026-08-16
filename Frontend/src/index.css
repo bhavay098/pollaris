@@ -327,6 +327,9 @@ html[data-theme="light"] .home-shell .bg-blue-500 .text-white { color: #ffffff !
 
 @media (max-width: 480px) {
   .app-topbar { padding-top: 14px; padding-bottom: 8px; }
+  .app-main { padding-bottom: 40px; }
+  .poll-list { gap: 16px; }
+  .page-heading { margin-bottom: 16px; gap: 16px; }
   .page-title { font-size: clamp(1.75rem, 7vw, 2.2rem); }
   .page-description { font-size: 14px; }
   .panel-title, .card-title { font-size: 16px; }

@@ -16,13 +16,13 @@ export default function Integrations() {
       <div className="relative overflow-hidden rounded-3xl border border-white/8 bg-zinc-800/50 p-8 md:p-12">
         <div className="relative text-center mb-12">
           <p className="text-xs uppercase tracking-[0.12em] text-teal-400 font-semibold">
-            Integrations
+            Share Anywhere
           </p>
           <h3 className="mt-5 text-3xl md:text-4xl font-bold tracking-[-0.025em] leading-[1.08]">
-            Works where your team works.
+            Works where your audience is.
           </h3>
           <p className="mt-4 text-zinc-400 text-sm">
-            Connect Pollaris with the tools you already use.
+            Drop your poll link in the tools your team already uses.
           </p>
         </div>
         <div className="relative grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 sm:gap-4">
@@ -44,7 +44,7 @@ export default function Integrations() {
           ))}
         </div>
         <p className="relative text-center mt-8 text-zinc-500 text-xs">
-          + Zapier, Make, REST API, and 40+ more integrations
+          Easily accessible from mobile, desktop, or tablet.
         </p>
       </div>
     </section>

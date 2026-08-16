@@ -5,14 +5,14 @@ const steps = [
     number: "01",
     title: "Create Your Poll",
     description:
-      "Build a poll in seconds using our intuitive editor. Add questions, set options, and customize the look.",
+      "Build a poll in seconds using our intuitive editor. Add questions, set access controls, and configure expiry times.",
     color: "teal",
   },
   {
     number: "02",
     title: "Share Instantly",
     description:
-      "Generate a unique link or embed the poll anywhere - your website, Slack, email, or social media.",
+      "Generate a unique public link and share it directly with your audience, or drop it in any chat.",
     color: "sky",
   },
   {
@@ -24,9 +24,9 @@ const steps = [
   },
   {
     number: "04",
-    title: "Analyze & Export",
+    title: "Publish Insights",
     description:
-      "Dive into detailed analytics, filter by segment, and export data as CSV or PDF for your reports.",
+      "Dive into detailed analytics on drop-off rates, then publish the final results back to your audience with a single click.",
     color: "cyan",
   },
 ];

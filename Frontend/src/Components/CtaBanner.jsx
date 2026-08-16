@@ -40,8 +40,7 @@ export default function CtaBanner() {
             </ActionButton>
           </div>
           <p className="mt-6 text-zinc-600 text-xs">
-            No credit card required · Free forever plan available · Cancel
-            anytime
+            100% Free to use · No credit card required · Open source
           </p>
         </div>
       </div>
