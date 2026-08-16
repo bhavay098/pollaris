@@ -18,6 +18,14 @@ const blankQuestion = () => ({
   ],
 });
 
+// Format a Date for a <input type="datetime-local">, which expects local time.
+// ISO string methods return UTC, which would shift the displayed time by the
+// user's timezone offset.
+const toDatetimeLocalValue = (date) => {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 export default function PollBuilder() {
   const { pollId } = useParams();
   // If the URL has a pollId, we're editing an existing poll.
@@ -25,15 +33,26 @@ export default function PollBuilder() {
   const navigate = useNavigate();
 
   // Entire poll being edited, including all questions and their options.
+  // Expiry is split into date + time so each has its own clearly-labeled input.
   const [form, setForm] = useState({
     title: "",
     description: "",
     responseMode: "ANONYMOUS",
-    expiresAt: "",
+    expiryDate: "",
+    expiryTime: "",
     questions: [blankQuestion()],
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // e.g. "Asia/Kolkata" — shown as a hint so users know expiry uses local time.
+  const localTimezone = useMemo(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return "";
+    }
+  }, []);
 
   // Edit mode: load the existing poll and populate the form once.
   useEffect(() => {
@@ -45,12 +64,15 @@ export default function PollBuilder() {
         const response = await api.getPollById(pollId);
         const poll = response.data.poll;
         if (!cancelled) {
+          // Convert the stored expiry to local time, then split it into
+          // "YYYY-MM-DD" (date input) and "HH:MM" (time input).
+          const local = toDatetimeLocalValue(new Date(poll.expiresAt));
           setForm({
             title: poll.title,
             description: poll.description || "",
             responseMode: poll.responseMode,
-            // datetime-local inputs expect "YYYY-MM-DDTHH:MM"; slice drops seconds.
-            expiresAt: new Date(poll.expiresAt).toISOString().slice(0, 16),
+            expiryDate: local.slice(0, 10),
+            expiryTime: local.slice(11),
             questions: poll.questions,
           });
         }
@@ -129,11 +151,21 @@ export default function PollBuilder() {
     setError("");
     setLoading(true);
 
+    // Recombine the split date + time inputs into the ISO-style string the
+    // backend expects. Both are required, so the API never sees a partial value.
+    const payload = {
+      title: form.title,
+      description: form.description,
+      responseMode: form.responseMode,
+      expiresAt: `${form.expiryDate}T${form.expiryTime}`,
+      questions: form.questions,
+    };
+
     try {
       if (isEdit) {
-        await api.updatePoll(pollId, form);
+        await api.updatePoll(pollId, payload);
       } else {
-        await api.createPoll(form);
+        await api.createPoll(payload);
       }
       navigate("/dashboard");
     } catch (err) {
@@ -168,19 +200,24 @@ export default function PollBuilder() {
             <label htmlFor="poll-description">Description <span className="muted">(optional)</span></label>
             <textarea id="poll-description" placeholder="A short note that helps people understand the decision behind this poll." rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
           </div>
+          <div className="field">
+            <label htmlFor="response-mode">Who can respond?</label>
+            <select id="response-mode" value={form.responseMode} onChange={(e) => setForm((prev) => ({ ...prev, responseMode: e.target.value }))}>
+              <option value="ANONYMOUS">Anyone, anonymously</option>
+              <option value="AUTHENTICATED">Signed-in people only</option>
+            </select>
+          </div>
           <div className="split-fields">
             <div className="field">
-              <label htmlFor="response-mode">Who can respond?</label>
-              <select id="response-mode" value={form.responseMode} onChange={(e) => setForm((prev) => ({ ...prev, responseMode: e.target.value }))}>
-                <option value="ANONYMOUS">Anyone, anonymously</option>
-                <option value="AUTHENTICATED">Signed-in people only</option>
-              </select>
+              <label htmlFor="expiry-date">Expiry date</label>
+              <input id="expiry-date" type="date" required value={form.expiryDate} onChange={(e) => setForm((prev) => ({ ...prev, expiryDate: e.target.value }))} />
             </div>
             <div className="field">
-              <label htmlFor="expires-at">Close responses at</label>
-              <input id="expires-at" type="datetime-local" required value={form.expiresAt} onChange={(e) => setForm((prev) => ({ ...prev, expiresAt: e.target.value }))} />
+              <label htmlFor="expiry-time">Expiry time</label>
+              <input id="expiry-time" type="time" required value={form.expiryTime} onChange={(e) => setForm((prev) => ({ ...prev, expiryTime: e.target.value }))} />
             </div>
           </div>
+          <p className="muted" style={{ marginTop: "-6px" }}>Expiry is in your local timezone{localTimezone ? ` (${localTimezone})` : ""}.</p>
         </section>
 
         {form.questions.map((question, qIndex) => (

@@ -11,7 +11,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [publishingId, setPublishingId] = useState(null);
+  const [unpublishingId, setUnpublishingId] = useState(null);
   const [sharingId, setSharingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const { user } = useAuthStore();
 
   // Load polls once when the page mounts.
@@ -53,6 +55,24 @@ export default function Dashboard() {
     }
   };
 
+  const unpublishPoll = async (pollId) => {
+    setError("");
+    setUnpublishingId(pollId);
+
+    try {
+      await api.unpublishPoll(pollId);
+      setPolls((currentPolls) =>
+        currentPolls.map((poll) =>
+          poll.id === pollId ? { ...poll, isPublished: false } : poll,
+        ),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUnpublishingId(null);
+    }
+  };
+
   const sharePoll = async (poll) => {
     const publicUrl = `${window.location.origin}/p/${poll.slug}`;
     setError("");
@@ -69,6 +89,24 @@ export default function Dashboard() {
       if (err?.name !== "AbortError") setError("Unable to share the poll link");
     } finally {
       setSharingId(null);
+    }
+  };
+
+  const deletePoll = async (poll) => {
+    if (!window.confirm(`Delete "${poll.title}"? This cannot be undone.`)) return;
+
+    setError("");
+    setDeletingId(poll.id);
+
+    try {
+      await api.deletePoll(poll.id);
+      setPolls((currentPolls) =>
+        currentPolls.filter((item) => item.id !== poll.id),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -110,7 +148,9 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="card-actions" style={{ marginTop: "20px" }}>
-                <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/edit`}>Edit poll</Link>
+                {!poll.isPublished ? (
+                  <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/edit`}>Edit poll</Link>
+                ) : null}
                 <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/analytics`}>View analytics</Link>
                 <button className="btn btn-secondary" type="button" disabled={sharingId === poll.id} onClick={() => void sharePoll(poll)}>
                   {sharingId === poll.id ? "Sharing…" : "Share poll"}
@@ -120,7 +160,14 @@ export default function Dashboard() {
                   <button className="btn btn-primary" type="button" disabled={publishingId === poll.id} onClick={() => void publishPoll(poll.id)}>
                     {publishingId === poll.id ? "Publishing…" : "Publish results"}
                   </button>
-                ) : null}
+                ) : (
+                  <button className="btn btn-secondary" type="button" disabled={unpublishingId === poll.id} onClick={() => void unpublishPoll(poll.id)}>
+                    {unpublishingId === poll.id ? "Unpublishing…" : "Unpublish"}
+                  </button>
+                )}
+                <button className="btn btn-secondary btn-danger" type="button" disabled={deletingId === poll.id} onClick={() => void deletePoll(poll)}>
+                  {deletingId === poll.id ? "Deleting…" : "Delete"}
+                </button>
               </div>
             </article>
           ))}

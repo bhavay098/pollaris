@@ -49,8 +49,13 @@ const api = {
       body: JSON.stringify(payload),
     }),
 
+  deletePoll: (pollId) => request(`/polls/${pollId}`, { method: "DELETE" }),
+
   publishPoll: (pollId) =>
     request(`/polls/${pollId}/publish`, { method: "POST" }),
+
+  unpublishPoll: (pollId) =>
+    request(`/polls/${pollId}/unpublish`, { method: "POST" }),
 
   // --- Analytics (authenticated poll owners) ---
   analyticsSummary: (pollId) => request(`/polls/${pollId}/analytics/summary`),

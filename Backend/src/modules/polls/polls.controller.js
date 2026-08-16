@@ -120,6 +120,12 @@ const updatePoll = async (req, res, next) => {
 
       const existingResponses = await Response.countDocuments({ pollId: poll._id });
 
+      // Publishing locks the poll's content — the public may be viewing
+      // questions/results, so editing is no longer allowed.
+      if (poll.isPublished) {
+        throw ApiError.conflict("Poll cannot be edited after publishing");
+      }
+
       // Editing after responses would corrupt the analytics, so disallow it.
       if (existingResponses > 0) {
         throw ApiError.conflict("Poll cannot be edited after receiving responses");
@@ -137,6 +143,29 @@ const updatePoll = async (req, res, next) => {
 
       return ApiResponse.ok(res, "Poll updated successfully", { poll });
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /polls/:pollId — delete a poll (owner-only) along with all its responses.
+const deletePoll = async (req, res, next) => {
+  try {
+    // findOneAndDelete scopes by the logged-in user, so users can only
+    // delete their own polls.
+    const poll = await Poll.findOneAndDelete({
+      _id: req.params.pollId,
+      createdBy: req.user.id,
+    });
+
+    if (!poll) {
+      throw ApiError.notFound("Poll not found");
+    }
+
+    // Cascade: remove the poll's responses so no orphaned data is left behind.
+    await Response.deleteMany({ pollId: poll._id });
+
+    return ApiResponse.ok(res, "Poll deleted successfully");
   } catch (error) {
     next(error);
   }
@@ -174,6 +203,43 @@ const publishPoll = async (req, res, next) => {
     });
 
     return ApiResponse.ok(res, "Poll published successfully", { poll });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /polls/:pollId/unpublish — take a live poll back down to draft, hiding
+// its results from the public again.
+const unpublishPoll = async (req, res, next) => {
+  try {
+    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+
+    if (!poll) {
+      throw ApiError.notFound("Poll not found");
+    }
+
+    if (!poll.isPublished) {
+      throw ApiError.conflict("Poll is not published");
+    }
+
+    poll.isPublished = false;
+    poll.publishedAt = null;
+    await poll.save();
+
+    // Mirror the publish broadcast so open dashboards/result pages react.
+    const io = getIO();
+    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", {
+      pollId: String(poll._id),
+      isPublished: false,
+      publishedAt: null,
+    });
+    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", {
+      pollId: String(poll._id),
+      isPublished: false,
+      publishedAt: null,
+    });
+
+    return ApiResponse.ok(res, "Poll unpublished successfully", { poll });
   } catch (error) {
     next(error);
   }
@@ -259,7 +325,9 @@ export {
   getMyPolls,
   getPollById,
   updatePoll,
+  deletePoll,
   publishPoll,
+  unpublishPoll,
   getAnalyticsSummary,
   getAnalyticsQuestions,
   getAnalyticsParticipation,
