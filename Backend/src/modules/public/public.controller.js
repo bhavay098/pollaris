@@ -53,15 +53,18 @@ const validateSubmission = (poll, answers = []) => {
   }
 };
 
-// GET /api/public/polls/:slug — fetch a poll for display to respondents.
-// Any existing poll is reachable by slug so respondents can answer it; the
-// `isPublished` flag only controls whether results are shown (not access).
+// GET /api/public/polls/:slug — fetch a published poll for display to respondents.
+// Unpublished (draft) polls are hidden from the public entirely.
 const getPublicPollBySlug = async (req, res, next) => {
   try {
     const poll = await Poll.findOne({ slug: req.params.slug }).lean();
 
     if (!poll) {
       throw ApiError.notFound("Poll not found");
+    }
+
+    if (!poll.isPublished) {
+      throw ApiError.forbidden("This poll is not yet published");
     }
 
     const isExpired = new Date() > new Date(poll.expiresAt);
@@ -97,9 +100,12 @@ const submitPublicResponse = async (req, res, next) => {
         throw ApiError.notFound("Poll not found");
       }
 
-      // Reject if the poll is missing or past its expiry.
+      // Reject if the poll is missing, unpublished, or past its expiry.
       const state = ensurePollActive(poll);
       if (!state.ok) {
+        if (state.code === 403) {
+          throw ApiError.forbidden(state.message);
+        }
         if (state.code === 410) {
           throw ApiError.gone(state.message);
         }

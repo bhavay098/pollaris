@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [publishingId, setPublishingId] = useState(null);
   const [unpublishingId, setUnpublishingId] = useState(null);
   const [sharingId, setSharingId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const { user } = useAuthStore();
 
@@ -83,6 +84,8 @@ export default function Dashboard() {
         await navigator.share({ title: poll.title, url: publicUrl });
       } else {
         await navigator.clipboard.writeText(publicUrl);
+        setCopiedId(poll.id);
+        setTimeout(() => setCopiedId((prev) => (prev === poll.id ? null : prev)), 2500);
       }
     } catch (err) {
       // Closing the native share sheet is not an error.
@@ -158,7 +161,7 @@ export default function Dashboard() {
                 <Link className="btn btn-quiet" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open public link</Link>
                 {!poll.isPublished ? (
                   <button className="btn btn-primary" type="button" disabled={publishingId === poll.id} onClick={() => void publishPoll(poll.id)}>
-                    {publishingId === poll.id ? "Publishing…" : "Publish results"}
+                    {publishingId === poll.id ? "Publishing…" : "Publish poll"}
                   </button>
                 ) : (
                   <button className="btn btn-secondary" type="button" disabled={unpublishingId === poll.id} onClick={() => void unpublishPoll(poll.id)}>
@@ -169,6 +172,7 @@ export default function Dashboard() {
                   {deletingId === poll.id ? "Deleting…" : "Delete"}
                 </button>
               </div>
+              {copiedId === poll.id ? <p className="alert alert-success" style={{ marginTop: "12px" }}>Link copied to clipboard</p> : null}
             </article>
           ))}
         </div>

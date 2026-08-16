@@ -1,6 +1,6 @@
 // Public poll page (route "/p/:slug"). This is the shareable link anyone can
-// open: visitors answer the questions, and if the owner has published final
-// results they see the results instead. Realtime via WebSocket.
+// open: visitors answer the questions if the poll is published and not expired.
+// Realtime via WebSocket keeps the poll status in sync (e.g. unpublish).
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
@@ -18,7 +18,6 @@ export default function PublicPoll() {
   // submitted/message/error tracks the form submission result.
   const [status, setStatus] = useState({ submitted: false, message: "", error: "" });
   const [loading, setLoading] = useState(true);
-  const [results, setResults] = useState(null);
 
   // True once the poll's expiry date has passed (disables submitting).
   const isExpired = useMemo(() => {
@@ -26,20 +25,13 @@ export default function PublicPoll() {
     return new Date() > new Date(poll.expiresAt);
   }, [poll]);
 
-  // Fetch the poll by slug; if it's published, also pull its results.
+  // Fetch the poll by slug.
   const loadPoll = useCallback(async () => {
     try {
       const response = await api.getPublicPoll(slug);
-      if (response.data.poll.isPublished) {
-        const resultRes = await api.getPublicResults(slug);
-        setResults(resultRes.data);
-      } else {
-        setResults(null);
-      }
       setPoll(response.data.poll);
     } catch (err) {
       setPoll(null);
-      setResults(null);
       setStatus((prev) => ({ ...prev, error: err.message }));
     } finally {
       setLoading(false);
@@ -51,22 +43,12 @@ export default function PublicPoll() {
     void loadPoll();
   }, [loadPoll]);
 
-  // Realtime: join the public room for this poll. When new responses arrive
-  // (and results are published) refresh the numbers; when the owner publishes
-  // results, re-fetch the poll so this page switches to the results view.
+  // Realtime: join the public room for this poll so the page reacts when the
+  // owner publishes or unpublishes it while a visitor is watching.
   useEffect(() => {
     socket.connect();
     socket.emit("poll:join_public", { slug });
 
-    const onRealtime = async () => {
-      if (poll?.isPublished) {
-        const resultRes = await api.getPublicResults(slug);
-        setResults(resultRes.data);
-      }
-    };
-
-    socket.on("analytics:response_received", onRealtime);
-    socket.on("analytics:question_updated", onRealtime);
     const onStatusChanged = () => {
       void loadPoll();
     };
@@ -74,12 +56,10 @@ export default function PublicPoll() {
 
     // Cleanup on unmount: remove listeners and close the socket.
     return () => {
-      socket.off("analytics:response_received", onRealtime);
-      socket.off("analytics:question_updated", onRealtime);
       socket.off("poll:status_changed", onStatusChanged);
       socket.disconnect();
     };
-  }, [loadPoll, poll?.isPublished, slug]);
+  }, [loadPoll, slug]);
 
   // Convert the answers map {questionId: optionId} into the array shape the
   // backend expects, then POST it.
@@ -107,35 +87,6 @@ export default function PublicPoll() {
 
   if (status.error && !poll) {
     return <AppShell><div className="alert alert-error" role="alert">{status.error}</div></AppShell>;
-  }
-
-  // Published results view: no form, just the final numbers.
-  if (poll?.isPublished && results) {
-    return (
-      <AppShell>
-        <section className="public-hero">
-          <span className="eyebrow">Published readout</span>
-          <h1 className="page-title">{results.poll.title}</h1>
-          <div className="public-meta"><span>{results.totalResponses} total responses</span><span>Results are now public</span></div>
-        </section>
-        <div className="analytics-stack" style={{ marginTop: "14px" }}>
-          {results.questionWise.map((q) => (
-            <section key={q.questionId} className="panel">
-              <h2 className="panel-title">{q.text}</h2>
-              <div style={{ marginTop: "18px" }}>
-                {q.options.map((opt) => (
-                  <div key={opt.optionId} className="result-row">
-                    <span>{opt.text}</span>
-                    <div className="result-track" aria-hidden="true"><div className="result-fill" style={{ width: `${opt.percentage}%` }} /></div>
-                    <span className="result-value">{opt.count} · {opt.percentage}%</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      </AppShell>
-    );
   }
 
   // Auth-gated poll: logged-out visitors get a "login required" screen.

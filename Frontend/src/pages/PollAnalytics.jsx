@@ -114,6 +114,12 @@ export default function PollAnalytics() {
 
       {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
 
+      {summary && !summary.isPublished ? (
+        <div className="alert" style={{ borderColor: "color-mix(in srgb, var(--app-accent) 45%, transparent)", background: "color-mix(in srgb, var(--app-accent) 9%, transparent)", color: "var(--app-accent)" }}>
+          This poll is still in draft mode. Publish it from the dashboard so people can respond.
+        </div>
+      ) : null}
+
       {summary ? (
         <div className="stat-grid" aria-label="Analytics summary">
           <div className="stat-card"><span className="stat-label">Total responses</span><strong className="stat-value">{summary.totalResponses}</strong></div>
@@ -168,7 +174,7 @@ export default function PollAnalytics() {
         </section>
       </div>
 
-      {!summary?.isPublished ? <button className="btn btn-primary" onClick={publish} style={{ marginTop: "18px" }}>Publish final results</button> : null}
+      {!summary?.isPublished ? <button className="btn btn-primary" onClick={publish} style={{ marginTop: "18px" }}>Publish poll</button> : null}
     </AppShell>
   );
 }

@@ -21,6 +21,10 @@ const ensurePollActive = (poll) => {
     return { ok: false, code: 404, message: "Poll not found" };
   }
 
+  if (!poll.isPublished) {
+    return { ok: false, code: 403, message: "This poll is not yet published" };
+  }
+
   if (new Date() > new Date(poll.expiresAt)) {
     return { ok: false, code: 410, message: "Poll has expired" };
   }
