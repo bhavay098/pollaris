@@ -1,7 +1,7 @@
 // ThemeProvider: holds the app's light/dark theme state and exposes it through
 // React context. Mounted once at the app root (main.jsx) so every component
 // can read the theme via useTheme().
-import { useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { THEME_STORAGE_KEY, ThemeContext } from "../hooks/theme-context.js";
 
 // Decide the starting theme the first time the provider mounts:
@@ -28,12 +28,16 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   // Flip between the two themes (functional update avoids stale state).
-  const toggleTheme = () => {
+  // Wrapped in useCallback so the identity is stable across renders.
+  const toggleTheme = useCallback(() => {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
-  };
+  }, []);
+
+  // Memoized so the Provider value keeps the same identity unless theme changes.
+  const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

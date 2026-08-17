@@ -77,6 +77,7 @@ export default function Settings() {
       navigate("/");
     } catch (err) {
       toast.error(err.message || "Failed to delete account");
+    } finally {
       setIsDeleting(false);
     }
   };
