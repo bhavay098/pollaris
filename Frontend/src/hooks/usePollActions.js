@@ -2,7 +2,7 @@
 // delete, etc.) and their per-poll busy flags. Extracted from Dashboard to
 // keep the page component focused on layout and data fetching.
 import { useState } from "react";
-import api from "../../lib/api";
+import api from "../lib/api";
 import { toast } from "sonner";
 
 export default function usePollActions(triggerRefresh) {
