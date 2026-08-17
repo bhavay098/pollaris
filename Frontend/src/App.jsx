@@ -1,9 +1,10 @@
 // App routes. Every URL the app can show is declared here, mapped to a page
-// component. Routes wrapped in <ProtectedRoute> require a logged-in user.
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import PollBuilder from "./pages/PollBuilder";
@@ -35,6 +36,8 @@ function App() {
         {/* Auth pages: signed-in users bounce straight to the dashboard */}
         <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+        <Route path="/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
 
         {/* Authenticated (login required): poll management */}
         <Route

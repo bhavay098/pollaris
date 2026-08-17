@@ -65,7 +65,12 @@ export default function Login() {
               <input id="login-email" placeholder="you@company.com" type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             </div>
             <div className="field">
-              <label htmlFor="login-password">Password</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label htmlFor="login-password">Password</label>
+                <Link to="/forgot-password" className="link-accent" style={{ fontSize: "0.8125rem" }}>
+                  Forgot password?
+                </Link>
+              </div>
               <input id="login-password" placeholder="Your password" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
             </div>
             {error ? <p className="alert alert-error" role="alert">{error}</p> : null}

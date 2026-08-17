@@ -30,8 +30,8 @@ const globalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  limit: 5, // Stricter: Limit each IP to only 5 auth requests per hour
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 50, // Allow reasonable attempts for dev & auth flows
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { success: false, message: "Too many authentication attempts, please try again later." },
@@ -42,6 +42,12 @@ app.use(globalLimiter);
 
 // Better Auth must receive the raw request body before Express parses JSON.
 app.use("/api/auth", authLimiter);
+app.use("/api/auth", (req, _res, next) => {
+  if (req.url === "/forget-password" || req.url.startsWith("/forget-password?")) {
+    req.url = req.url.replace("/forget-password", "/request-password-reset");
+  }
+  next();
+});
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());

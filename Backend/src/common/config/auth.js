@@ -4,6 +4,7 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
+import { sendPasswordResetEmail } from "../utils/email.js";
 
 const databaseUrl = process.env.MONGODB_URI;
 
@@ -29,6 +30,7 @@ const socialProviders =
       }
     : {};
 
+
 export const auth = betterAuth({
   appName: "Pollaris",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -36,6 +38,13 @@ export const auth = betterAuth({
   database: mongodbAdapter(mongoClient.db()),
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail({
+        to: user.email,
+        url,
+        userName: user.name,
+      });
+    },
   },
   socialProviders,
 });
