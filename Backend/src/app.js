@@ -61,6 +61,11 @@ const authLimiter = rateLimit({
   handler: createRateLimitHandler("Too many authentication attempts"),
 });
 
+// Health check endpoints (placed before rate limiter for external uptime monitors/cron pings)
+app.get(["/health", "/api/health"], (_req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 // Apply global rate limiter
 app.use(globalLimiter);
 
