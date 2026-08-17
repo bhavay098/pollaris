@@ -1,7 +1,6 @@
 // GlobalErrorFallback: what the user sees when a runtime error crashes the app.
 // Used as the FallbackComponent of the ErrorBoundary in App.jsx — it shows the
 // error message plus a "Try again" (re-renders the app) and "Go to homepage".
-import React from "react";
 
 export default function GlobalErrorFallback({ error, resetErrorBoundary }) {
   return (

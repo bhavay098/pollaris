@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")).render(
     <ThemeProvider>
       <AuthSessionSync />
       <App />
-      {process.env.NODE_ENV === "development" && <Agentation />}
+      {import.meta.env.DEV && <Agentation />}
     </ThemeProvider>
   </StrictMode>,
 );

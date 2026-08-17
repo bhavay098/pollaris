@@ -5,6 +5,20 @@
 import { create } from "zustand";
 import { authClient } from "../lib/auth-client";
 
+const handleAuthError = (error) => {
+  if (!error) return new Error("Authentication failed");
+  if (
+    error.status === 429 ||
+    error.message?.toLowerCase().includes("too many requests") ||
+    error.message?.toLowerCase().includes("rate limit")
+  ) {
+    return new Error(
+      error.message || "Too many authentication attempts. Please wait a few minutes before trying again."
+    );
+  }
+  return new Error(error.message || "Authentication failed");
+};
+
 export const useAuthStore = create((set, get) => ({
   user: null,
   loading: true,
@@ -24,7 +38,7 @@ export const useAuthStore = create((set, get) => ({
   login: async (payload) => {
     const { data, error } = await authClient.signIn.email(payload);
 
-    if (error) throw new Error(error.message);
+    if (error) throw handleAuthError(error);
 
     await get().refreshMe();
     return data;
@@ -32,14 +46,14 @@ export const useAuthStore = create((set, get) => ({
 
   register: async (payload) => {
     const { data, error } = await authClient.signUp.email(payload);
-    if (error) throw new Error(error.message);
+    if (error) throw handleAuthError(error);
     await get().refreshMe();
     return data;
   },
 
   logout: async () => {
     const { error } = await authClient.signOut();
-    if (error) throw new Error(error.message);
+    if (error) throw handleAuthError(error);
     await get().refreshMe();
   },
 
@@ -49,7 +63,7 @@ export const useAuthStore = create((set, get) => ({
       provider: "google",
       callbackURL: "http://localhost:5173/dashboard",
     });
-    if (error) throw new Error(error.message);
+    if (error) throw handleAuthError(error);
   },
 
   // Re-fetch the session from better-auth so user/loading state is current.

@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function Card({ className = '', children, ...props }) {
   return (
     <section className={`panel ${className}`.trim()} {...props}>

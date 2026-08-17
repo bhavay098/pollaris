@@ -12,29 +12,53 @@ import ApiError from "./common/utils/api-error.js";
 
 const app = express();
 
-// Enable CORS for the frontend origin and allow credentials (cookies) to be sent.
+// Helper to format second durations into user-friendly text (e.g. "45 seconds", "15 minutes")
+const formatDuration = (seconds) => {
+  if (!seconds || seconds <= 0) return "a moment";
+  if (seconds < 60) return `${seconds} second${seconds === 1 ? "" : "s"}`;
+  const mins = Math.ceil(seconds / 60);
+  return `${mins} minute${mins === 1 ? "" : "s"}`;
+};
+
+// Factory for rate limiter response handlers that include retryAfter in seconds and a clear message
+const createRateLimitHandler = (prefix) => (req, res, _next, options) => {
+  const retryAfterHeader = res.getHeader("Retry-After");
+  const retryAfter = retryAfterHeader ? Number(retryAfterHeader) : Math.ceil(options.windowMs / 1000);
+  const formatted = formatDuration(retryAfter);
+  const message = `${prefix || "Too many requests"}. Please wait ${formatted} before trying again.`;
+
+  res.status(options.statusCode || 429).json({
+    success: false,
+    isRateLimited: true,
+    retryAfter,
+    message,
+  });
+};
+
+// Enable CORS for the frontend origin, allow credentials, and expose rate limit headers.
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
+    exposedHeaders: ["Retry-After", "RateLimit-Reset", "RateLimit-Limit", "RateLimit-Remaining"],
   }),
 );
 
 // Set up rate limiters
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Stricter: Limit each IP to 100 requests per 15 minutes.
-  standardHeaders: "draft-8", 
-  legacyHeaders: false, 
-  message: { success: false, message: "Too many requests, please try again later." },
+  limit: 100, // Limit each IP to 100 requests per 15 minutes
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: createRateLimitHandler("Too many requests from your IP"),
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 50, // Allow reasonable attempts for dev & auth flows
+  limit: 50, // Limit auth attempts to 50 per 15 minutes
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: { success: false, message: "Too many authentication attempts, please try again later." },
+  handler: createRateLimitHandler("Too many authentication attempts"),
 });
 
 // Apply global rate limiter

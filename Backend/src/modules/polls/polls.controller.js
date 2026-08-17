@@ -36,16 +36,45 @@ const createPoll = async (req, res, next) => {
   }
 };
 
-// GET /polls/mine — list the current user's polls with a live response count.
+// Helper to escape special regex characters in search queries
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// GET /polls/mine — list the current user's polls with search, filtering, sorting, pagination, and live response counts.
 const getMyPolls = async (req, res, next) => {
   try {
-    const polls = await Poll.aggregate([
-      // Only return polls owned by the requesting user.
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 6));
+    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const status = typeof req.query.status === "string" ? req.query.status.toLowerCase().trim() : "all";
+    const sort = typeof req.query.sort === "string" ? req.query.sort.toLowerCase().trim() : "newest";
+
+    // Determine status filter condition
+    let statusMatch = null;
+    if (status === "active") {
+      statusMatch = { isPublished: true, isExpired: false };
+    } else if (status === "draft") {
+      statusMatch = { isPublished: false };
+    } else if (status === "expired") {
+      statusMatch = { isExpired: true };
+    }
+
+    // Determine sort condition
+    let sortStage = { createdAt: -1 };
+    if (sort === "oldest") {
+      sortStage = { createdAt: 1 };
+    } else if (sort === "most_votes") {
+      sortStage = { totalResponses: -1, createdAt: -1 };
+    } else if (sort === "least_votes") {
+      sortStage = { totalResponses: 1, createdAt: -1 };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [result] = await Poll.aggregate([
+      // Only return polls owned by the requesting user
       { $match: { createdBy: req.user.id } },
-      // Newest polls first.
-      { $sort: { createdAt: -1 } },
       {
-        // Join each poll with its response documents so we can count them without a separate query per poll (avoids an N+1 problem).
+        // Join each poll with its responses to count submissions without N+1 queries
         $lookup: {
           from: "responses",
           localField: "_id",
@@ -54,7 +83,7 @@ const getMyPolls = async (req, res, next) => {
         },
       },
       {
-        // Shape the output: expose a friendly `id` field and computed metrics instead of the raw responses array.
+        // Shape output fields and compute metrics
         $project: {
           _id: 0,
           id: "$_id",
@@ -70,9 +99,77 @@ const getMyPolls = async (req, res, next) => {
           isExpired: { $lt: ["$expiresAt", "$$NOW"] },
         },
       },
+      {
+        $facet: {
+          // Overall user stats across all polls (for dashboard counters)
+          overview: [
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                active: {
+                  $sum: {
+                    $cond: [{ $and: ["$isPublished", { $not: ["$isExpired"] }] }, 1, 0],
+                  },
+                },
+                draft: {
+                  $sum: {
+                    $cond: [{ $eq: ["$isPublished", false] }, 1, 0],
+                  },
+                },
+                expired: {
+                  $sum: {
+                    $cond: ["$isExpired", 1, 0],
+                  },
+                },
+                totalResponses: { $sum: "$totalResponses" },
+              },
+            },
+          ],
+          // Filtered & paginated results
+          filtered: [
+            ...(search ? [{ $match: { title: { $regex: escapeRegex(search), $options: "i" } } }] : []),
+            ...(statusMatch ? [{ $match: statusMatch }] : []),
+            {
+              $facet: {
+                totalMatching: [{ $count: "count" }],
+                paginatedPolls: [
+                  { $sort: sortStage },
+                  { $skip: skip },
+                  { $limit: limit },
+                ],
+              },
+            },
+          ],
+        },
+      },
     ]);
 
-    return ApiResponse.ok(res, "Polls fetched", { polls });
+    const totalFiltered = result?.filtered?.[0]?.totalMatching?.[0]?.count || 0;
+    const polls = result?.filtered?.[0]?.paginatedPolls || [];
+    const totalPages = Math.ceil(totalFiltered / limit) || 1;
+    const overview = result?.overview?.[0] || {
+      total: 0,
+      active: 0,
+      draft: 0,
+      expired: 0,
+      totalResponses: 0,
+    };
+
+    const pagination = {
+      totalPolls: totalFiltered,
+      totalPages,
+      currentPage: page,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
+
+    return ApiResponse.ok(res, "Polls fetched", {
+      polls,
+      pagination,
+      stats: overview,
+    });
   } catch (error) {
     next(error);
   }

@@ -2,6 +2,17 @@
 // The backend URL comes from the VITE_API_BASE_URL env var.
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
+// Helper to format second durations into user-friendly text for retry messages
+export const formatRetryDuration = (seconds) => {
+  if (!seconds || isNaN(seconds) || seconds <= 0) return "a moment";
+  const sec = Math.ceil(seconds);
+  if (sec < 60) return `${sec} second${sec === 1 ? "" : "s"}`;
+  const mins = Math.floor(sec / 60);
+  const remSec = sec % 60;
+  if (remSec === 0) return `${mins} minute${mins === 1 ? "" : "s"}`;
+  return `${mins} min ${remSec} sec`;
+};
+
 // Generic fetch wrapper: builds the URL, sends the request with cookies
 // (so the backend can identify the logged-in user), and parses the JSON body.
 const request = async (path, options = {}) => {
@@ -20,7 +31,26 @@ const request = async (path, options = {}) => {
     const errorBody = contentType.includes("application/json")
       ? await response.json()
       : null;
-    throw new Error(errorBody?.message || `Request failed: ${response.status}`);
+
+    // Handle rate limiting (HTTP 429) explicitly with cooldown guidance
+    if (response.status === 429) {
+      const retryHeader = response.headers.get("retry-after");
+      const retrySeconds = retryHeader ? Number(retryHeader) : (errorBody?.retryAfter || 60);
+      const formattedTime = formatRetryDuration(retrySeconds);
+      
+      const customMessage = errorBody?.message || 
+        `Rate limit reached (too many requests). Please wait ${formattedTime} before trying again.`;
+      
+      const error = new Error(customMessage);
+      error.status = 429;
+      error.isRateLimited = true;
+      error.retryAfter = retrySeconds;
+      throw error;
+    }
+
+    const error = new Error(errorBody?.message || `Request failed: ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   // Only try to parse JSON if the successful response actually sent JSON.
@@ -39,7 +69,16 @@ const api = {
   createPoll: (payload) =>
     request("/polls", { method: "POST", body: JSON.stringify(payload) }),
 
-  getMyPolls: () => request("/polls/mine"),
+  getMyPolls: (params = {}) => {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        searchParams.append(key, value);
+      }
+    });
+    const query = searchParams.toString();
+    return request(`/polls/mine${query ? `?${query}` : ""}`);
+  },
 
   getPollById: (pollId) => request(`/polls/${pollId}`),
 

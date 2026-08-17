@@ -1,5 +1,5 @@
 // Authenticated dashboard (route "/dashboard"): lists the current user's polls
-// with links to edit, view analytics, open the public link, or create a new poll.
+// with search, status filtering, sorting, pagination, and quick action controls.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
@@ -7,13 +7,37 @@ import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
 import { toast } from "sonner";
 import Skeleton from "../Components/ui/Skeleton.jsx";
+import DashboardToolbar from "../Components/dashboard/DashboardToolbar.jsx";
+import PollCard from "../Components/dashboard/PollCard.jsx";
+import Pagination from "../Components/ui/Pagination.jsx";
 
 export default function Dashboard() {
-  // The current user's list of polls.
   const [polls, setPolls] = useState([]);
+  const [pagination, setPagination] = useState({
+    totalPolls: 0,
+    totalPages: 1,
+    currentPage: 1,
+    limit: 6,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    draft: 0,
+    expired: 0,
+    totalResponses: 0,
+  });
   const [loading, setLoading] = useState(true);
-  // Track WHICH poll each async action is running on so the right button can
-  // show a loading state and be disabled while its request is in flight.
+
+  // Search, filter, sort & pagination state
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState("newest");
+  const [page, setPage] = useState(1);
+
+  // Track active async action per poll card
   const [publishingId, setPublishingId] = useState(null);
   const [unpublishingId, setUnpublishingId] = useState(null);
   const [publishingResultsId, setPublishingResultsId] = useState(null);
@@ -22,41 +46,85 @@ export default function Dashboard() {
   const [deletingId, setDeletingId] = useState(null);
   const { user } = useAuthStore();
 
-  // Load polls once when the page mounts. `cancelled` guards against calling
-  // setState after unmount (React warning + memory leak).
+  // Incrementing refreshKey triggers a background refetch
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Debounce search query to prevent spamming backend on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Reset to page 1 on new search
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Fetch polls matching current query parameters
   useEffect(() => {
     let cancelled = false;
 
-    const loadPolls = async () => {
+    const fetchPolls = async () => {
+      setLoading(true);
       try {
-        const response = await api.getMyPolls();
-        if (!cancelled) setPolls(response.data.polls);
+        const response = await api.getMyPolls({
+          search: debouncedSearch,
+          status,
+          sort,
+          page,
+          limit: 6,
+        });
+
+        if (!cancelled) {
+          setPolls(response.data.polls || []);
+          if (response.data.pagination) {
+            setPagination(response.data.pagination);
+          }
+          if (response.data.stats) {
+            setStats(response.data.stats);
+          }
+        }
       } catch (err) {
-        if (!cancelled) toast.error(err.message);
+        if (!cancelled) toast.error(err.message || "Failed to load polls");
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    void loadPolls();
+    void fetchPolls();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [debouncedSearch, status, sort, page, refreshKey]);
 
-  // Toggle a poll from draft -> published. Updates the local list optimistically
-  // so the UI reflects the new state without a refetch.
+  const triggerRefresh = () => {
+    setRefreshKey((k) => k + 1);
+  };
+
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    setPage(1);
+  };
+
+  const handleSortChange = (newSort) => {
+    setSort(newSort);
+    setPage(1);
+  };
+
+  const clearAllFilters = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setStatus("all");
+    setSort("newest");
+    setPage(1);
+  };
+
+  // Toggle a poll from draft -> published
   const publishPoll = async (pollId) => {
     setPublishingId(pollId);
-
     try {
       await api.publishPoll(pollId);
-      setPolls((currentPolls) =>
-        currentPolls.map((poll) =>
-          poll.id === pollId ? { ...poll, isPublished: true } : poll,
-        ),
-      );
       toast.success("Poll published!");
+      triggerRefresh();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -64,19 +132,13 @@ export default function Dashboard() {
     }
   };
 
-  // Unpublish a poll: makes the public link stop accepting responses and also
-  // hides published results (both flags are reset to false).
+  // Unpublish a poll
   const unpublishPoll = async (pollId) => {
     setUnpublishingId(pollId);
-
     try {
       await api.unpublishPoll(pollId);
-      setPolls((currentPolls) =>
-        currentPolls.map((poll) =>
-          poll.id === pollId ? { ...poll, isPublished: false, resultsPublished: false } : poll,
-        ),
-      );
       toast.success("Poll unpublished!");
+      triggerRefresh();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -84,18 +146,13 @@ export default function Dashboard() {
     }
   };
 
-  // Publish the final results so the public link shows the outcome summary.
+  // Publish final results
   const publishResults = async (pollId) => {
     setPublishingResultsId(pollId);
-
     try {
       await api.publishResults(pollId);
-      setPolls((currentPolls) =>
-        currentPolls.map((poll) =>
-          poll.id === pollId ? { ...poll, resultsPublished: true } : poll,
-        ),
-      );
       toast.success("Results published!");
+      triggerRefresh();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -103,18 +160,13 @@ export default function Dashboard() {
     }
   };
 
-  // Hide the published results again (poll keeps accepting responses).
+  // Hide published results
   const unpublishResults = async (pollId) => {
     setUnpublishingResultsId(pollId);
-
     try {
       await api.unpublishResults(pollId);
-      setPolls((currentPolls) =>
-        currentPolls.map((poll) =>
-          poll.id === pollId ? { ...poll, resultsPublished: false } : poll,
-        ),
-      );
       toast.success("Results unpublished!");
+      triggerRefresh();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -122,12 +174,10 @@ export default function Dashboard() {
     }
   };
 
-  // Share the public poll URL: uses the native share sheet on mobile where
-  // available, otherwise falls back to copying the link to the clipboard.
+  // Share public poll URL
   const sharePoll = async (poll) => {
     const publicUrl = `${window.location.origin}/p/${poll.slug}`;
     setSharingId(poll.id);
-
     try {
       if (navigator.share) {
         await navigator.share({ title: poll.title, url: publicUrl });
@@ -136,25 +186,20 @@ export default function Dashboard() {
         toast.success("Link copied to clipboard!");
       }
     } catch (err) {
-      // Closing the native share sheet is not an error.
       if (err?.name !== "AbortError") toast.error("Unable to share the poll link");
     } finally {
       setSharingId(null);
     }
   };
 
-  // Delete a poll after a confirmation dialog; removes it from the local list.
+  // Delete a poll
   const deletePoll = async (poll) => {
     if (!window.confirm(`Delete "${poll.title}"? This cannot be undone.`)) return;
-
     setDeletingId(poll.id);
-
     try {
       await api.deletePoll(poll.id);
-      setPolls((currentPolls) =>
-        currentPolls.filter((item) => item.id !== poll.id),
-      );
       toast.success("Poll deleted.");
+      triggerRefresh();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -162,27 +207,55 @@ export default function Dashboard() {
     }
   };
 
+  const isFiltered = Boolean(debouncedSearch || status !== "all");
+
   return (
     <AppShell>
       <div className="page-heading">
         <div>
           <span className="eyebrow">Command center / overview</span>
           <h1 className="page-title">Your questions, in motion.</h1>
-          <p className="page-description">Welcome back, {user?.name}. Keep a clear view of what is live, what is still taking shape, and where the signal is strongest.</p>
+          <p className="page-description">
+            Welcome back, {user?.name}. Keep a clear view of what is live, what is still taking shape, and where the signal is strongest.
+          </p>
         </div>
         <div className="page-actions">
           <Link className="btn btn-primary" to="/dashboard/polls/new">Create poll</Link>
         </div>
       </div>
 
-      {/* Summary stats computed from the loaded polls. */}
+      {/* Summary stats computed across all user polls */}
       <div className="stat-grid" aria-label="Poll overview">
-        <div className="stat-card"><span className="stat-label">Polls in space</span><strong className="stat-value">{polls.length}</strong></div>
-        <div className="stat-card"><span className="stat-label">Live now</span><strong className="stat-value success">{polls.filter((poll) => poll.isPublished).length}</strong></div>
-        <div className="stat-card"><span className="stat-label">Responses</span><strong className="stat-value">{polls.reduce((total, poll) => total + (poll.totalResponses || 0), 0)}</strong></div>
-        <div className="stat-card"><span className="stat-label">Mode</span><strong className="stat-value accent">Live</strong></div>
+        <div className="stat-card">
+          <span className="stat-label">Polls in space</span>
+          <strong className="stat-value">{stats.total}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Live now</span>
+          <strong className="stat-value success">{stats.active}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Responses</span>
+          <strong className="stat-value">{stats.totalResponses}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Drafts</span>
+          <strong className="stat-value accent">{stats.draft}</strong>
+        </div>
       </div>
 
+      {/* Search, Filter & Sort Toolbar */}
+      <DashboardToolbar
+        search={search}
+        onSearchChange={setSearch}
+        status={status}
+        onStatusChange={handleStatusChange}
+        sort={sort}
+        onSortChange={handleSortChange}
+        stats={stats}
+      />
+
+      {/* Loading Skeletons */}
       {loading ? (
         <div className="poll-list">
           {[1, 2, 3].map((i) => (
@@ -207,60 +280,68 @@ export default function Dashboard() {
         </div>
       ) : null}
 
+      {/* Poll Cards List */}
       {!loading && polls.length > 0 ? (
-        <div className="poll-list">
-          {polls.map((poll) => (
-            <article key={poll.id} className="poll-card">
-              {/* Header: poll title/slug and response count + publish status. */}
-              <div className="card-heading">
-                <div>
-                  <h2 className="poll-card-title">{poll.title}</h2>
-                  <p className="poll-slug">/{poll.slug}</p>
-                </div>
-                <div className="poll-meta">
-                  <span>{poll.totalResponses} responses</span>
-                  <span className={`status-chip ${poll.isPublished ? "live" : "draft"}`}>{poll.isPublished ? "Published" : "Draft"}</span>
-                </div>
-              </div>
-              <div className="card-actions" style={{ marginTop: "20px" }}>
-                {!poll.isPublished ? (
-                  <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/edit`}>Edit poll</Link>
-                ) : null}
-                <Link className="btn btn-secondary" to={`/dashboard/polls/${poll.id}/analytics`}>View analytics</Link>
-                <button className="btn btn-secondary" type="button" disabled={sharingId === poll.id} onClick={() => void sharePoll(poll)}>
-                  {sharingId === poll.id ? "Sharing…" : "Share poll"}
-                </button>
-                <Link className="btn btn-quiet" to={`/p/${poll.slug}`} target="_blank" rel="noreferrer">Open public link</Link>
-                {!poll.isPublished ? (
-                  <button className="btn btn-primary" type="button" disabled={publishingId === poll.id} onClick={() => void publishPoll(poll.id)}>
-                    {publishingId === poll.id ? "Publishing…" : "Publish poll"}
-                  </button>
-                ) : (
-                  <>
-                    <button className="btn btn-secondary" type="button" disabled={unpublishingId === poll.id} onClick={() => void unpublishPoll(poll.id)}>
-                      {unpublishingId === poll.id ? "Unpublishing…" : "Unpublish poll"}
-                    </button>
-                    {!poll.resultsPublished ? (
-                      <button className="btn btn-primary" type="button" disabled={publishingResultsId === poll.id} onClick={() => void publishResults(poll.id)}>
-                        {publishingResultsId === poll.id ? "Publishing results…" : "Publish results"}
-                      </button>
-                    ) : (
-                      <button className="btn btn-secondary" type="button" disabled={unpublishingResultsId === poll.id} onClick={() => void unpublishResults(poll.id)}>
-                        {unpublishingResultsId === poll.id ? "Unpublishing results…" : "Unpublish results"}
-                      </button>
-                    )}
-                  </>
-                )}
-                <button className="btn btn-secondary btn-danger" type="button" disabled={deletingId === poll.id} onClick={() => void deletePoll(poll)}>
-                  {deletingId === poll.id ? "Deleting…" : "Delete"}
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+        <>
+          <div className="poll-list">
+            {polls.map((poll) => (
+              <PollCard
+                key={poll.id}
+                poll={poll}
+                publishingId={publishingId}
+                unpublishingId={unpublishingId}
+                publishingResultsId={publishingResultsId}
+                unpublishingResultsId={unpublishingResultsId}
+                sharingId={sharingId}
+                deletingId={deletingId}
+                onPublish={publishPoll}
+                onUnpublish={unpublishPoll}
+                onPublishResults={publishResults}
+                onUnpublishResults={unpublishResults}
+                onShare={sharePoll}
+                onDelete={deletePoll}
+              />
+            ))}
+          </div>
+
+          <Pagination
+            pagination={pagination}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+              window.scrollTo({ top: 200, behavior: "smooth" });
+            }}
+          />
+        </>
       ) : null}
 
-      {!loading && polls.length === 0 ? <div className="empty-state"><strong>Your first signal starts here.</strong>Create a poll to begin collecting responses.</div> : null}
+      {/* Empty States */}
+      {!loading && polls.length === 0 ? (
+        isFiltered ? (
+          <div className="empty-state">
+            <strong>No matching polls found</strong>
+            <p className="text-sm text-[var(--app-muted)] mt-1 mb-4">
+              We couldn't find any polls matching your active filters and search query.
+            </p>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={clearAllFilters}
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="empty-state">
+            <strong>Your first signal starts here.</strong>
+            <p className="text-sm text-[var(--app-muted)] mt-1 mb-4">
+              Create a poll to begin collecting responses and analyzing insights in real-time.
+            </p>
+            <Link className="btn btn-primary" to="/dashboard/polls/new">
+              Create your first poll
+            </Link>
+          </div>
+        )
+      ) : null}
     </AppShell>
   );
 }
