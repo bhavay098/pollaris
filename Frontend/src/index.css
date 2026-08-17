@@ -89,21 +89,22 @@ html[data-theme="light"] .app-shell {
   mask-image: linear-gradient(to bottom, black, transparent 92%);
 }
 
-.app-topbar, .app-main { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
+.app-topbar, .app-main { width: min(1200px, calc(100% - 40px)); margin-inline: auto; }
 .app-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px 0 10px; }
-.app-brand { display: inline-flex; align-items: center; gap: 11px; color: var(--app-text); text-decoration: none; }
-.brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid color-mix(in srgb, var(--app-primary) 65%, transparent); border-radius: 13px; background: color-mix(in srgb, var(--app-primary) 18%, var(--app-surface-solid)); color: var(--app-primary); font-size: 17px; font-weight: 700; box-shadow: 0 0 28px color-mix(in srgb, var(--app-primary) 12%, transparent); }
+.app-brand { display: inline-flex; align-items: center; gap: 13px; color: var(--app-text); text-decoration: none; }
+.brand-mark { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid color-mix(in srgb, var(--app-primary) 65%, transparent); border-radius: 14px; background: color-mix(in srgb, var(--app-primary) 18%, var(--app-surface-solid)); color: var(--app-primary); font-size: 19px; font-weight: 700; box-shadow: 0 0 28px color-mix(in srgb, var(--app-primary) 12%, transparent); }
 .brand-name, .brand-caption { display: block; }
-.brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.025em; }
+.brand-name { font-size: 17px; font-weight: 700; letter-spacing: -0.025em; }
 .brand-caption, .workspace-label, .eyebrow, .stat-label, .meta-label { color: var(--app-subtle); font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; }
-.brand-caption { margin-top: 2px; font-size: 8px; letter-spacing: 0.12em; }
+.brand-caption { margin-top: 2px; font-size: 9px; letter-spacing: 0.12em; }
+.workspace-label { font-size: 11px; padding: 5px 12px; border: 1px solid var(--app-border); border-radius: 999px; background: color-mix(in srgb, var(--app-surface-solid) 60%, transparent); }
 .app-topbar-tools { display: flex; align-items: center; gap: 16px; }
 
-.theme-toggle { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border: 1px solid var(--app-border); border-radius: 13px; background: color-mix(in srgb, var(--app-surface) 88%, transparent); color: var(--app-muted); cursor: pointer; transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, background 180ms ease; }
+.theme-toggle { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--app-border); border-radius: 14px; background: color-mix(in srgb, var(--app-surface) 88%, transparent); color: var(--app-muted); cursor: pointer; transition: border-color 180ms ease, color 180ms ease, transform 180ms ease, background 180ms ease; }
 .theme-toggle:hover { border-color: var(--app-border-strong); background: var(--app-surface-raised); color: var(--app-text); }
 .theme-toggle:active { transform: scale(0.97); }
 .theme-toggle:focus-visible, .btn:focus-visible, .app-brand:focus-visible, .app-main a:focus-visible, .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 3px solid color-mix(in srgb, var(--app-primary) 55%, transparent); outline-offset: 3px; }
-.theme-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.theme-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
 .google-icon { width: 18px; height: 18px; flex: 0 0 18px; }
 
 .app-main { position: relative; padding: 58px 0 80px; }
@@ -442,12 +443,16 @@ html[data-theme="light"] .app-shell {
 .auth-main { padding: 34px 0 44px; }
 .auth-main .auth-layout {
   min-height: calc(100dvh - 146px);
-  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 440px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 440px);
   gap: clamp(28px, 5vw, 72px);
 }
-.auth-main .auth-visual { max-width: 520px; }
-.auth-main .auth-visual .page-title { font-size: clamp(2.5rem, 4.8vw, 4.5rem); }
-.auth-main .signal-list { margin-top: 24px; gap: 8px; }
+.auth-main .auth-visual { max-width: 580px; }
+.auth-main .auth-visual .page-title {
+  font-size: clamp(2.1rem, 3.2vw, 3rem);
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
 .auth-main .auth-card { align-self: center; padding: clamp(20px, 3vw, 30px); }
 .auth-main .auth-card h1, .auth-main .auth-card h2 { font-size: 28px; line-height: 1.06; }
 .auth-main .auth-card .form-stack { margin-top: 18px; gap: 12px; }
@@ -564,12 +569,12 @@ html[data-theme="light"] .home-shell .bg-blue-500 .text-white { color: #ffffff !
   .panel-heading .result-value, .card-heading .result-value { text-align: left; }
   .auth-layout { min-height: auto; grid-template-columns: 1fr; align-items: stretch; gap: 34px; padding: 24px 0 36px; }
   .page-actions { justify-content: flex-start; }
-  .auth-visual .page-title { font-size: clamp(2.8rem, 14vw, 4.3rem); }
+  .auth-visual .page-title { font-size: clamp(1.6rem, 5.5vw, 2.4rem); line-height: 1.15; }
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .auth-main { padding: 24px 0 36px; }
   .auth-main .auth-layout { min-height: auto; grid-template-columns: 1fr; align-items: stretch; gap: 28px; }
   .auth-main .auth-visual { max-width: none; }
-  .auth-main .auth-visual .page-title { font-size: clamp(2.55rem, 12vw, 4rem); }
+  .auth-main .auth-visual .page-title { font-size: clamp(1.5rem, 5vw, 2.25rem); line-height: 1.15; }
 }
 
 @media (max-width: 520px) {
@@ -592,6 +597,7 @@ html[data-theme="light"] .home-shell .bg-blue-500 .text-white { color: #ffffff !
   .poll-list { gap: 16px; }
   .page-heading { margin-bottom: 16px; gap: 16px; }
   .page-title { font-size: clamp(1.75rem, 7vw, 2.2rem); }
+  .auth-visual .page-title, .auth-main .auth-visual .page-title { font-size: clamp(1.4rem, 5.5vw, 1.85rem); line-height: 1.16; }
   .page-description { font-size: 14px; }
   .panel-title, .card-title { font-size: 16px; }
   .poll-card-title { font-size: 18px; }

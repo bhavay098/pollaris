@@ -57,11 +57,13 @@ export const useAuthStore = create((set, get) => ({
     await get().refreshMe();
   },
 
-  // OAuth flow: better-auth redirects to Google and then back to /dashboard.
-  loginWithGoogle: async () => {
+  // OAuth flow: better-auth redirects to Google and then back to redirectPath (defaults to /dashboard).
+  loginWithGoogle: async (redirectPath = "/dashboard") => {
+    const target = redirectPath.startsWith("/") ? redirectPath : `/${redirectPath}`;
+    const callbackURL = `${window.location.origin}${target}`;
     const { error } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "http://localhost:5173/dashboard",
+      callbackURL,
     });
     if (error) throw handleAuthError(error);
   },

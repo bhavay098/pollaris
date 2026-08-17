@@ -140,14 +140,24 @@ export default function PublicPoll() {
 
   // Auth-gated poll: logged-out visitors get a "login required" screen.
   if (poll.responseMode === "AUTHENTICATED" && !user) {
+    const returnUrl = `/p/${poll.slug}`;
     return (
       <AppShell>
         <div className="auth-layout" style={{ minHeight: "calc(100dvh - 220px)", gridTemplateColumns: "1fr" }}>
           <section className="auth-card" style={{ maxWidth: "520px", margin: "auto", textAlign: "center" }}>
             <span className="eyebrow">Private response channel</span>
             <h1>Login required</h1>
-            <p className="page-description" style={{ marginInline: "auto" }}>This poll accepts authenticated responses only. Sign in to share your answer.</p>
-            <Link className="btn btn-primary" to="/login" style={{ marginTop: "22px" }}>Go to login</Link>
+            <p className="page-description" style={{ marginInline: "auto" }}>
+              This poll accepts authenticated responses only. Sign in to share your answer.
+            </p>
+            <div className="button-row" style={{ justifyContent: "center", marginTop: "24px" }}>
+              <Link className="btn btn-primary" to={`/login?redirect=${encodeURIComponent(returnUrl)}`}>
+                Sign in to respond
+              </Link>
+              <Link className="btn btn-secondary" to={`/register?redirect=${encodeURIComponent(returnUrl)}`}>
+                Create an account
+              </Link>
+            </div>
           </section>
         </div>
       </AppShell>

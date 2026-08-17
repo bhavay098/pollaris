@@ -109,7 +109,16 @@ const getMyPolls = async (req, res, next) => {
                 total: { $sum: 1 },
                 active: {
                   $sum: {
-                    $cond: [{ $and: ["$isPublished", { $not: ["$isExpired"] }] }, 1, 0],
+                    $cond: [
+                      {
+                        $and: [
+                          { $eq: ["$isPublished", true] },
+                          { $eq: ["$isExpired", false] },
+                        ],
+                      },
+                      1,
+                      0,
+                    ],
                   },
                 },
                 draft: {
@@ -119,34 +128,33 @@ const getMyPolls = async (req, res, next) => {
                 },
                 expired: {
                   $sum: {
-                    $cond: ["$isExpired", 1, 0],
+                    $cond: [{ $eq: ["$isExpired", true] }, 1, 0],
                   },
                 },
                 totalResponses: { $sum: "$totalResponses" },
               },
             },
           ],
-          // Filtered & paginated results
-          filtered: [
+          // Count of matching filtered results
+          totalMatching: [
             ...(search ? [{ $match: { title: { $regex: escapeRegex(search), $options: "i" } } }] : []),
             ...(statusMatch ? [{ $match: statusMatch }] : []),
-            {
-              $facet: {
-                totalMatching: [{ $count: "count" }],
-                paginatedPolls: [
-                  { $sort: sortStage },
-                  { $skip: skip },
-                  { $limit: limit },
-                ],
-              },
-            },
+            { $count: "count" },
+          ],
+          // Paginated list of polls
+          paginatedPolls: [
+            ...(search ? [{ $match: { title: { $regex: escapeRegex(search), $options: "i" } } }] : []),
+            ...(statusMatch ? [{ $match: statusMatch }] : []),
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: limit },
           ],
         },
       },
     ]);
 
-    const totalFiltered = result?.filtered?.[0]?.totalMatching?.[0]?.count || 0;
-    const polls = result?.filtered?.[0]?.paginatedPolls || [];
+    const totalFiltered = result?.totalMatching?.[0]?.count || 0;
+    const polls = result?.paginatedPolls || [];
     const totalPages = Math.ceil(totalFiltered / limit) || 1;
     const overview = result?.overview?.[0] || {
       total: 0,

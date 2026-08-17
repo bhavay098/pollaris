@@ -1,7 +1,7 @@
 // Registration page (route "/register"). Same structure as Login: collects
-// name/email/password, creates the account, then goes to the dashboard.
+// name/email/password, creates the account, then goes to the redirect target or dashboard.
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
 import GoogleIcon from "../Components/ui/GoogleIcon.jsx";
@@ -13,15 +13,17 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const { register, loginWithGoogle } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || "/dashboard";
 
-  // Email/password signup: create the account, then go straight to the dashboard.
+  // Email/password signup: create the account, then go to redirect target or dashboard.
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       await register(form);
-      navigate("/dashboard");
+      navigate(redirectUrl, { replace: true });
     } catch (err) {
       // Keep the user on the form and show why registration failed.
       setError(err.message);
@@ -35,12 +37,14 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      await loginWithGoogle();
+      await loginWithGoogle(redirectUrl);
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
   };
+
+  const loginLink = `/login${redirectUrl !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`;
 
   return (
     <AppShell mainClassName="auth-main">
@@ -49,10 +53,6 @@ export default function Register() {
           <span className="eyebrow">Start a signal / 02</span>
           <h1 id="register-heading" className="page-title">Make every response easier to act on.</h1>
           <p className="page-description">Create a focused workspace for the questions that matter. Your first poll is only a few considered fields away.</p>
-          <ul className="signal-list">
-            <li>Build question sets with clean, reusable structure.</li>
-            <li>Publish when you are ready, then watch the pattern form.</li>
-          </ul>
         </section>
 
         <form onSubmit={onSubmit} className="auth-card">
@@ -76,7 +76,7 @@ export default function Register() {
             <div className="auth-divider">or continue with</div>
             <button type="button" disabled={loading} onClick={onGoogleSignup} className="btn btn-secondary"><GoogleIcon /> Continue with Google</button>
           </div>
-          <p className="form-footer">Have an account? <Link className="link-accent" to="/login">Log in</Link></p>
+          <p className="form-footer">Have an account? <Link className="link-accent" to={loginLink}>Log in</Link></p>
         </form>
       </div>
     </AppShell>
