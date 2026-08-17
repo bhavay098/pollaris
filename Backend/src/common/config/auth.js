@@ -31,6 +31,8 @@ const socialProviders =
     : {};
 
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export const auth = betterAuth({
   appName: "Pollaris",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -47,4 +49,16 @@ export const auth = betterAuth({
     },
   },
   socialProviders,
+  // Cross-domain OAuth: frontend (Vercel) and backend (Render) are on different
+  // domains, so cookies must use SameSite=None + Secure to survive the Google
+  // redirect. Only applied in production since localhost doesn't use HTTPS.
+  ...(isProduction && {
+    advanced: {
+      useSecureCookies: true,
+      defaultCookieAttributes: {
+        sameSite: "none",
+        secure: true,
+      },
+    },
+  }),
 });
