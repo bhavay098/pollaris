@@ -2,6 +2,8 @@
 
 A poll platform. Creators build and share polls, respondents answer them anonymously or while signed in, and real-time analytics stream back to the dashboard the moment each response lands.
 
+**[Live Demo](https://pollaris.bhavaynagpal.com/)** - Try the fully working app.
+
 ## Tech Stack
 
 | Layer    | Technology                                                                       |
