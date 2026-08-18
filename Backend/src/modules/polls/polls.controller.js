@@ -88,6 +88,7 @@ const getMyPolls = async (req, res, next) => {
           _id: 0,
           id: "$_id",
           title: 1,
+          description: 1,
           slug: 1,
           responseMode: 1,
           expiresAt: 1,

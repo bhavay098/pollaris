@@ -33,7 +33,7 @@ export default function PollCard({
       <div className="card-heading">
         <div>
           <h2 className="poll-card-title">{poll.title}</h2>
-          <p className="poll-slug">/{poll.slug}</p>
+          <p className="poll-slug">{poll.description || `/${poll.slug}`}</p>
         </div>
         <div className="poll-meta">
           <span>{poll.totalResponses} {poll.totalResponses === 1 ? "response" : "responses"}</span>

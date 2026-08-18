@@ -484,7 +484,7 @@ html[data-theme="light"] .app-shell {
 .choice-row { display: flex; min-height: 52px; align-items: center; gap: 11px; padding: 0 14px; border: 1px solid var(--app-border); border-radius: 12px; color: var(--app-muted); cursor: pointer; transition: border-color 180ms ease, background 180ms ease, color 180ms ease; }
 .choice-row:hover, .choice-row:has(input:checked) { border-color: color-mix(in srgb, var(--app-primary) 60%, transparent); background: color-mix(in srgb, var(--app-primary) 9%, transparent); color: var(--app-text); }
 .public-hero { padding: clamp(24px, 5vw, 42px); border: 1px solid color-mix(in srgb, var(--app-primary) 32%, var(--app-border)); border-radius: 24px; background: linear-gradient(135deg, color-mix(in srgb, var(--app-primary) 12%, var(--app-surface-solid)), var(--app-surface)); box-shadow: var(--app-shadow); }
-.public-hero .page-title { max-width: 850px; }
+.public-hero .page-title { max-width: 850px; font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 650; letter-spacing: -0.025em; line-height: 1.15; }
 .public-meta { display: flex; flex-wrap: wrap; gap: 9px 16px; margin-top: 20px; color: var(--app-subtle); font-size: 11px; letter-spacing: 0.02em; }
 
 /* The homepage keeps its original glass treatment, but now follows the same
