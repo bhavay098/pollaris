@@ -26,6 +26,7 @@ const socialProviders =
         google: {
           clientId: googleClientId,
           clientSecret: googleClientSecret,
+          prompt: "select_account",
         },
       }
     : {};
