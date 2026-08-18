@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/auth/:path*",
+      "destination": "https://pollaris-backend-5lw1.onrender.com/api/auth/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
