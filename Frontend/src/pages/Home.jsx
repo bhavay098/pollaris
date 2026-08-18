@@ -9,7 +9,16 @@ import Testimonials from "../Components/Testimonials.jsx";
 import CtaBanner from "../Components/CtaBanner.jsx";
 import Footer from "../Components/Footer.jsx";
 
+import { useEffect } from "react";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+
 export default function Home() {
+  // Wake the Render backend (free-tier sleeps after inactivity) as soon as
+  // the landing page mounts, so it's ready by the time the user signs in.
+  useEffect(() => {
+    fetch(`${API_BASE}/health`).catch(() => {});
+  }, []);
 
   return (
     <div className="home-shell relative min-h-screen bg-zinc-950 text-white">
