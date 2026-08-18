@@ -49,6 +49,11 @@ export const auth = betterAuth({
       });
     },
   },
+  user: {
+    deleteUser: {
+      enabled: true,
+    },
+  },
   socialProviders,
   // Cross-domain OAuth: frontend (Vercel) and backend (Render) are on different
   // domains, so cookies must use SameSite=None + Secure to survive the Google
