@@ -121,6 +121,9 @@ const api = {
     }),
 
   getPublicResults: (slug) => request(`/public/polls/${slug}/results`),
+
+  // --- System / Health check ---
+  checkHealth: (options = {}) => request("/health", options),
 };
 
 export default api;

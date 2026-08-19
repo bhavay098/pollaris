@@ -1,6 +1,6 @@
 // Authenticated dashboard (route "/dashboard"): lists the current user's polls
 // with search, status filtering, sorting, pagination, and quick action controls.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 import { useAuthStore } from "../store/auth-store";
@@ -59,54 +59,64 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  const fetchPolls = useCallback(async () => {
+    try {
+      const response = await api.getMyPolls({
+        search: debouncedSearch,
+        status,
+        sort,
+        page,
+        limit: 6,
+      });
+      return response.data;
+    } catch (err) {
+      toast.error(err.message || "Failed to load polls");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, status, sort, page]);
+
   // Fetch polls matching current query parameters
   useEffect(() => {
     let cancelled = false;
 
-    const fetchPolls = async () => {
-      setLoading(true);
-      try {
-        const response = await api.getMyPolls({
-          search: debouncedSearch,
-          status,
-          sort,
-          page,
-          limit: 6,
-        });
-
-        if (!cancelled) {
-          setPolls(response.data.polls || []);
-          if (response.data.pagination) {
-            setPagination(response.data.pagination);
-          }
-          if (response.data.stats) {
-            setStats(response.data.stats);
-          }
+    void fetchPolls().then((data) => {
+      if (!cancelled && data) {
+        setPolls(data.polls || []);
+        if (data.pagination) {
+          setPagination(data.pagination);
         }
-      } catch (err) {
-        if (!cancelled) toast.error(err.message || "Failed to load polls");
-      } finally {
-        if (!cancelled) setLoading(false);
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
-    };
+    });
 
-    void fetchPolls();
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, status, sort, page, refreshKey]);
+  }, [fetchPolls, refreshKey]);
+
+  const handleSearchChange = (val) => {
+    setSearch(val);
+    setLoading(true);
+  };
 
   const handleStatusChange = (newStatus) => {
+    setLoading(true);
     setStatus(newStatus);
     setPage(1);
   };
 
   const handleSortChange = (newSort) => {
+    setLoading(true);
     setSort(newSort);
     setPage(1);
   };
 
   const clearAllFilters = () => {
+    setLoading(true);
     setSearch("");
     setDebouncedSearch("");
     setStatus("all");
@@ -137,7 +147,7 @@ export default function Dashboard() {
       {/* Search, Filter & Sort Toolbar */}
       <DashboardToolbar
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={handleSearchChange}
         status={status}
         onStatusChange={handleStatusChange}
         sort={sort}
@@ -175,6 +185,7 @@ export default function Dashboard() {
           <Pagination
             pagination={pagination}
             onPageChange={(newPage) => {
+              setLoading(true);
               setPage(newPage);
               window.scrollTo({ top: 200, behavior: "smooth" });
             }}
