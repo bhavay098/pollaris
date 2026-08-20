@@ -90,6 +90,8 @@ const submitPublicResponse = async (req, res, next) => {
       throw ApiError.notFound("Poll not found");
     }
 
+    // The poll is reloaded inside the lock so validation uses the latest
+    // questions, publication state, and expiry from MongoDB.
     return await withPollLock(String(existingPoll._id), async () => {
       const poll = await Poll.findOne({
         _id: existingPoll._id,

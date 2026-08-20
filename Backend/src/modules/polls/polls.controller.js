@@ -218,6 +218,8 @@ const updatePoll = async (req, res, next) => {
       throw ApiError.notFound("Poll not found");
     }
 
+    // Re-read and validate inside the lock so this update cannot race with a
+    // response submission or a poll lifecycle change on another server.
     return await withPollLock(String(existingPoll._id), async () => {
       const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
@@ -258,21 +260,34 @@ const updatePoll = async (req, res, next) => {
 // DELETE /polls/:pollId — delete a poll (owner-only) along with all its responses.
 const deletePoll = async (req, res, next) => {
   try {
-    // findOneAndDelete scopes by the logged-in user, so users can only
-    // delete their own polls.
-    const poll = await Poll.findOneAndDelete({
+    const existingPoll = await Poll.findOne({
       _id: req.params.pollId,
       createdBy: req.user.id,
     });
 
-    if (!poll) {
+    if (!existingPoll) {
       throw ApiError.notFound("Poll not found");
     }
 
-    // Cascade: remove the poll's responses so no orphaned data is left behind.
-    await Response.deleteMany({ pollId: poll._id });
+    // Deletion is serialized with response creation so the cascade cannot
+    // race with another server inserting a response for this poll.
+    return await withPollLock(String(existingPoll._id), async () => {
+      // Re-check ownership inside the lock, then delete the poll and its
+      // responses as one serialized mutation for this poll.
+      const poll = await Poll.findOneAndDelete({
+        _id: existingPoll._id,
+        createdBy: req.user.id,
+      });
 
-    return ApiResponse.ok(res, "Poll deleted successfully");
+      if (!poll) {
+        throw ApiError.notFound("Poll not found");
+      }
+
+      // Cascade: remove the poll's responses so no orphaned data is left behind.
+      await Response.deleteMany({ pollId: poll._id });
+
+      return ApiResponse.ok(res, "Poll deleted successfully");
+    });
   } catch (error) {
     next(error);
   }
@@ -281,35 +296,45 @@ const deletePoll = async (req, res, next) => {
 // POST /polls/:pollId/publish — mark a poll as live and notify subscribers.
 const publishPoll = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+    const existingPoll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
-    if (!poll) {
+    if (!existingPoll) {
       throw ApiError.notFound("Poll not found");
     }
 
-    if (poll.isPublished) {
-      throw ApiError.conflict("Poll is already published");
-    }
+    // Publishing changes whether the public response route is allowed to
+    // write, so the state check and save must be one serialized operation.
+    return await withPollLock(String(existingPoll._id), async () => {
+      const poll = await Poll.findOne({ _id: existingPoll._id, createdBy: req.user.id });
 
-    poll.isPublished = true;
-    poll.publishedAt = new Date();
-    await poll.save();
+      if (!poll) {
+        throw ApiError.notFound("Poll not found");
+      }
 
-    // Broadcast the new status over Socket.IO to everyone watching this poll:
-    // the owner's dashboard room and the public viewer room keyed by slug.
-    const io = getIO();
-    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", {
-      pollId: String(poll._id),
-      isPublished: true,
-      publishedAt: poll.publishedAt,
+      if (poll.isPublished) {
+        throw ApiError.conflict("Poll is already published");
+      }
+
+      poll.isPublished = true;
+      poll.publishedAt = new Date();
+      await poll.save();
+
+      // Broadcast the new status over Socket.IO to everyone watching this poll:
+      // the owner's dashboard room and the public viewer room keyed by slug.
+      const io = getIO();
+      io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", {
+        pollId: String(poll._id),
+        isPublished: true,
+        publishedAt: poll.publishedAt,
+      });
+      io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", {
+        pollId: String(poll._id),
+        isPublished: true,
+        publishedAt: poll.publishedAt,
+      });
+
+      return ApiResponse.ok(res, "Poll published successfully", { poll });
     });
-    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", {
-      pollId: String(poll._id),
-      isPublished: true,
-      publishedAt: poll.publishedAt,
-    });
-
-    return ApiResponse.ok(res, "Poll published successfully", { poll });
   } catch (error) {
     next(error);
   }
@@ -319,34 +344,43 @@ const publishPoll = async (req, res, next) => {
 // its results from the public again.
 const unpublishPoll = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+    const existingPoll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
-    if (!poll) {
+    if (!existingPoll) {
       throw ApiError.notFound("Poll not found");
     }
 
-    if (!poll.isPublished) {
-      throw ApiError.conflict("Poll is not published");
-    }
+    // Keep unpublishing ordered with submissions and other lifecycle changes.
+    return await withPollLock(String(existingPoll._id), async () => {
+      const poll = await Poll.findOne({ _id: existingPoll._id, createdBy: req.user.id });
 
-    poll.isPublished = false;
-    poll.publishedAt = null;
-    await poll.save();
+      if (!poll) {
+        throw ApiError.notFound("Poll not found");
+      }
 
-    // Mirror the publish broadcast so open dashboards/result pages react.
-    const io = getIO();
-    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", {
-      pollId: String(poll._id),
-      isPublished: false,
-      publishedAt: null,
+      if (!poll.isPublished) {
+        throw ApiError.conflict("Poll is not published");
+      }
+
+      poll.isPublished = false;
+      poll.publishedAt = null;
+      await poll.save();
+
+      // Mirror the publish broadcast so open dashboards/result pages react.
+      const io = getIO();
+      io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", {
+        pollId: String(poll._id),
+        isPublished: false,
+        publishedAt: null,
+      });
+      io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", {
+        pollId: String(poll._id),
+        isPublished: false,
+        publishedAt: null,
+      });
+
+      return ApiResponse.ok(res, "Poll unpublished successfully", { poll });
     });
-    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", {
-      pollId: String(poll._id),
-      isPublished: false,
-      publishedAt: null,
-    });
-
-    return ApiResponse.ok(res, "Poll unpublished successfully", { poll });
   } catch (error) {
     next(error);
   }
@@ -356,29 +390,39 @@ const unpublishPoll = async (req, res, next) => {
 // closing the poll. Respondents who visit after this point see the results view.
 const publishResults = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+    const existingPoll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
-    if (!poll) {
+    if (!existingPoll) {
       throw ApiError.notFound("Poll not found");
     }
 
-    if (!poll.isPublished) {
-      throw ApiError.conflict("Publish the poll before revealing its results");
-    }
+    // Results visibility is shared state observed by public clients, so update
+    // it under the same per-poll lock as the other mutations.
+    return await withPollLock(String(existingPoll._id), async () => {
+      const poll = await Poll.findOne({ _id: existingPoll._id, createdBy: req.user.id });
 
-    if (poll.resultsPublished) {
-      throw ApiError.conflict("Results are already published");
-    }
+      if (!poll) {
+        throw ApiError.notFound("Poll not found");
+      }
 
-    poll.resultsPublished = true;
-    await poll.save();
+      if (!poll.isPublished) {
+        throw ApiError.conflict("Publish the poll before revealing its results");
+      }
 
-    const io = getIO();
-    const payload = { pollId: String(poll._id), resultsPublished: true };
-    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", payload);
-    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", payload);
+      if (poll.resultsPublished) {
+        throw ApiError.conflict("Results are already published");
+      }
 
-    return ApiResponse.ok(res, "Results published successfully", { poll });
+      poll.resultsPublished = true;
+      await poll.save();
+
+      const io = getIO();
+      const payload = { pollId: String(poll._id), resultsPublished: true };
+      io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", payload);
+      io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", payload);
+
+      return ApiResponse.ok(res, "Results published successfully", { poll });
+    });
   } catch (error) {
     next(error);
   }
@@ -387,25 +431,34 @@ const publishResults = async (req, res, next) => {
 // POST /polls/:pollId/unpublish-results — revert the public page back to the voting form.
 const unpublishResults = async (req, res, next) => {
   try {
-    const poll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
+    const existingPoll = await Poll.findOne({ _id: req.params.pollId, createdBy: req.user.id });
 
-    if (!poll) {
+    if (!existingPoll) {
       throw ApiError.notFound("Poll not found");
     }
 
-    if (!poll.resultsPublished) {
-      throw ApiError.conflict("Results are not currently published");
-    }
+    // Serialize reverting the results visibility with any other poll change.
+    return await withPollLock(String(existingPoll._id), async () => {
+      const poll = await Poll.findOne({ _id: existingPoll._id, createdBy: req.user.id });
 
-    poll.resultsPublished = false;
-    await poll.save();
+      if (!poll) {
+        throw ApiError.notFound("Poll not found");
+      }
 
-    const io = getIO();
-    const payload = { pollId: String(poll._id), resultsPublished: false };
-    io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", payload);
-    io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", payload);
+      if (!poll.resultsPublished) {
+        throw ApiError.conflict("Results are not currently published");
+      }
 
-    return ApiResponse.ok(res, "Results unpublished successfully", { poll });
+      poll.resultsPublished = false;
+      await poll.save();
+
+      const io = getIO();
+      const payload = { pollId: String(poll._id), resultsPublished: false };
+      io.to(`poll:owner:${poll._id}`).emit("poll:status_changed", payload);
+      io.to(`poll:public:${poll.slug}`).emit("poll:status_changed", payload);
+
+      return ApiResponse.ok(res, "Results unpublished successfully", { poll });
+    });
   } catch (error) {
     next(error);
   }
