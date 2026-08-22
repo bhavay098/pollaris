@@ -1,32 +1,38 @@
-// Public poll page (route "/p/:slug"). This is the shareable link anyone can
-// open: visitors answer the questions if the poll is published and not expired.
-// Realtime via WebSocket keeps the poll status in sync (e.g. unpublish).
+// Public poll page (route "/p/:slug").
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../lib/api";
 import socket from "../lib/socket";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
+import CountdownTimer from "../Components/public/CountdownTimer.jsx";
+import SubmissionCelebration from "../Components/public/SubmissionCelebration.jsx";
+import Skeleton from "../Components/ui/Skeleton.jsx";
+import {
+  Globe,
+  ShieldCheck,
+  CheckCircle2,
+  Lock,
+  Send,
+  BarChart2,
+} from "lucide-react";
 
 export default function PublicPoll() {
   const { slug } = useParams();
-  // Needed to enforce "authenticated responses only" polls below.
   const { user } = useAuthStore();
   const [poll, setPoll] = useState(null);
-  // answers maps questionId -> selected optionId as the visitor fills the form.
   const [answers, setAnswers] = useState({});
-  // submitted/message/error tracks the form submission result.
   const [status, setStatus] = useState({ submitted: false, message: "", error: "" });
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState(null);
 
-  // True once the poll's expiry date has passed (disables submitting).
   const isExpired = useMemo(() => {
     if (!poll?.expiresAt) return false;
     return new Date() > new Date(poll.expiresAt);
   }, [poll]);
 
-  // Fetch the poll by slug.
+  // Fetch the poll by slug
   const loadPoll = useCallback(async () => {
     try {
       const response = await api.getPublicPoll(slug);
@@ -51,8 +57,7 @@ export default function PublicPoll() {
     void loadPoll();
   }, [loadPoll]);
 
-  // Realtime: join the public room for this poll so the page reacts when the
-  // owner publishes or unpublishes it while a visitor is watching.
+  // Realtime Socket listeners
   useEffect(() => {
     socket.connect();
     socket.emit("poll:join_public", { slug });
@@ -72,7 +77,6 @@ export default function PublicPoll() {
     };
     socket.on("poll:status_changed", onStatusChanged);
 
-    // Cleanup on unmount: remove listeners and close the socket.
     return () => {
       socket.off("analytics:response_received", onRealtime);
       socket.off("analytics:question_updated", onRealtime);
@@ -81,11 +85,27 @@ export default function PublicPoll() {
     };
   }, [loadPoll, poll?.resultsPublished, slug]);
 
-  // Convert the answers map {questionId: optionId} into the array shape the
-  // backend expects, then POST it.
+  // Keyboard shortcut listener (Cmd/Ctrl + Enter to submit)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        const submitBtn = document.getElementById("submit-poll-btn");
+        if (submitBtn && !submitBtn.disabled) {
+          submitBtn.click();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const submit = async (e) => {
     e.preventDefault();
+    if (isExpired || submitting) return;
+
     setStatus({ submitted: false, message: "", error: "" });
+    setSubmitting(true);
 
     try {
       const payload = {
@@ -95,39 +115,69 @@ export default function PublicPoll() {
         })),
       };
       await api.submitPublicResponse(slug, payload);
-      setStatus({ submitted: true, message: "Response submitted successfully", error: "" });
+      setStatus({ submitted: true, message: "Response submitted successfully!", error: "" });
     } catch (err) {
       setStatus({ submitted: false, message: "", error: err.message });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (loading) {
-    return <AppShell><div className="panel muted">Loading poll…</div></AppShell>;
+    return (
+      <AppShell>
+        <div className="max-w-2xl mx-auto space-y-6 pt-8">
+          <Skeleton className="h-40 w-full rounded-3xl" />
+          <Skeleton className="h-48 w-full rounded-3xl" />
+        </div>
+      </AppShell>
+    );
   }
 
   if (status.error && !poll) {
-    return <AppShell><div className="alert alert-error" role="alert">{status.error}</div></AppShell>;
+    return (
+      <AppShell>
+        <div className="max-w-md mx-auto my-12 p-6 rounded-3xl border border-red-500/30 bg-red-500/10 text-red-300 text-center">
+          <p className="text-sm font-semibold">{status.error}</p>
+        </div>
+      </AppShell>
+    );
   }
 
   // Published results view: no form, just the final numbers.
   if (poll?.resultsPublished && results) {
     return (
       <AppShell>
-        <section className="public-hero">
-          <span className="eyebrow">Published readout</span>
-          <h1 className="page-title">{results.poll.title}</h1>
-          <div className="public-meta"><span>{results.totalResponses} total responses</span><span>Results are now public</span></div>
+        <section className="public-hero max-w-3xl mx-auto">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <span className="eyebrow text-xs">Published Readout</span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 text-teal-400 text-xs font-semibold">
+              <BarChart2 className="h-3.5 w-3.5" />
+              <span>Results are live & public</span>
+            </span>
+          </div>
+          <h1 className="page-title text-2xl sm:text-4xl font-bold">{results.poll.title}</h1>
+          <div className="public-meta mt-3">
+            <span>{results.totalResponses} total responses</span>
+          </div>
         </section>
-        <div className="analytics-stack" style={{ marginTop: "14px" }}>
-          {results.questionWise.map((q) => (
+
+        <div className="analytics-stack max-w-3xl mx-auto mt-6 space-y-4">
+          {results.questionWise.map((q, qIndex) => (
             <section key={q.questionId} className="panel">
-              <h2 className="panel-title">{q.text}</h2>
-              <div style={{ marginTop: "18px" }}>
+              <h2 className="panel-title text-base sm:text-lg font-bold">
+                {qIndex + 1}. {q.text}
+              </h2>
+              <div className="space-y-3 mt-4">
                 {q.options.map((opt) => (
                   <div key={opt.optionId} className="result-row">
-                    <span>{opt.text}</span>
-                    <div className="result-track" aria-hidden="true"><div className="result-fill" style={{ width: `${opt.percentage}%` }} /></div>
-                    <span className="result-value">{opt.count} · {opt.percentage}%</span>
+                    <span className="truncate font-medium">{opt.text}</span>
+                    <div className="result-track" aria-hidden="true">
+                      <div className="result-fill" style={{ width: `${opt.percentage}%` }} />
+                    </div>
+                    <span className="result-value font-mono">
+                      {opt.count} · {opt.percentage}%
+                    </span>
                   </div>
                 ))}
               </div>
@@ -144,17 +194,20 @@ export default function PublicPoll() {
     return (
       <AppShell>
         <div className="auth-layout" style={{ minHeight: "calc(100dvh - 220px)", gridTemplateColumns: "1fr" }}>
-          <section className="auth-card" style={{ maxWidth: "520px", margin: "auto", textAlign: "center" }}>
-            <span className="eyebrow">Private response channel</span>
-            <h1>Login required</h1>
-            <p className="page-description" style={{ marginInline: "auto" }}>
+          <section className="auth-card max-w-md mx-auto text-center space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
+              <Lock className="h-7 w-7" />
+            </div>
+            <span className="eyebrow">Private Response Channel</span>
+            <h1 className="text-2xl font-bold text-[var(--app-text)]">Sign-in Required</h1>
+            <p className="text-sm text-[var(--app-muted)] leading-relaxed">
               This poll accepts authenticated responses only. Sign in to share your answer.
             </p>
-            <div className="button-row" style={{ justifyContent: "center", marginTop: "24px" }}>
-              <Link className="btn btn-primary" to={`/login?redirect=${encodeURIComponent(returnUrl)}`}>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+              <Link className="btn btn-primary text-xs py-2.5 px-5" to={`/login?redirect=${encodeURIComponent(returnUrl)}`}>
                 Sign in to respond
               </Link>
-              <Link className="btn btn-secondary" to={`/register?redirect=${encodeURIComponent(returnUrl)}`}>
+              <Link className="btn btn-secondary text-xs py-2.5 px-5" to={`/register?redirect=${encodeURIComponent(returnUrl)}`}>
                 Create an account
               </Link>
             </div>
@@ -169,23 +222,19 @@ export default function PublicPoll() {
     return (
       <AppShell>
         <div className="auth-layout" style={{ minHeight: "calc(100dvh - 220px)", gridTemplateColumns: "1fr" }}>
-          <section className="auth-card" style={{ maxWidth: "560px", margin: "auto", textAlign: "center" }}>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
-              <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "rgba(100, 255, 218, 0.1)", color: "var(--app-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-                  <path d="m9 12 2 2 4-4"/>
-                </svg>
-              </div>
+          <section className="auth-card max-w-lg mx-auto text-center space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400">
+              <ShieldCheck className="h-7 w-7" />
             </div>
             <span className="eyebrow">Owner View</span>
-            <h1 style={{ marginTop: "8px", marginBottom: "16px" }}>You own this poll</h1>
-            <p className="page-description" style={{ marginInline: "auto", fontSize: "16px", lineHeight: "1.6" }}>
-              To ensure the integrity of the results, poll creators cannot submit responses to their own polls. You can view the live results on your analytics dashboard.
+            <h1 className="text-2xl font-bold text-[var(--app-text)]">You own this poll</h1>
+            <p className="text-sm text-[var(--app-muted)] leading-relaxed">
+              To ensure data integrity, creators cannot submit responses to their own polls. You can view live incoming answers on your analytics dashboard.
             </p>
-            <div style={{ marginTop: "32px" }}>
-              <Link className="btn btn-primary" to={`/dashboard/polls/${poll.id}/analytics`}>
-                View live analytics
+            <div className="pt-2">
+              <Link className="btn btn-primary text-xs py-2.5 px-6 gap-2" to={`/dashboard/polls/${poll.id}/analytics`}>
+                <BarChart2 className="h-4 w-4" />
+                <span>View Live Analytics</span>
               </Link>
             </div>
           </section>
@@ -194,36 +243,138 @@ export default function PublicPoll() {
     );
   }
 
+  // Post-submission celebration view
+  if (status.submitted) {
+    return (
+      <AppShell>
+        <SubmissionCelebration pollTitle={poll.title} slug={slug} />
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
-      <form onSubmit={submit} className="builder-grid">
+      <form onSubmit={submit} className="max-w-2xl mx-auto space-y-6 pb-12">
+        {/* Public Poll Hero Header */}
         <section className="public-hero">
-          <span className="eyebrow">Open response channel</span>
-          <h1 className="page-title">{poll.title}</h1>
-          <p className="page-description">{poll.description}</p>
-          <div className="public-meta"><span>Closes {new Date(poll.expiresAt).toLocaleString()}</span><span>{poll.responseMode === "ANONYMOUS" ? "Anonymous responses" : "Signed-in responses"}</span></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <span className="eyebrow text-xs">Open Response Channel</span>
+            <CountdownTimer expiresAt={poll.expiresAt} />
+          </div>
+
+          <h1 className="page-title text-2xl sm:text-3xl font-bold tracking-tight text-[var(--app-text)]">
+            {poll.title}
+          </h1>
+
+          {poll.description && (
+            <p className="mt-2 text-sm text-[var(--app-muted)] leading-relaxed">
+              {poll.description}
+            </p>
+          )}
+
+          <div className="public-meta mt-4 pt-3 border-t border-[var(--app-border)] flex items-center justify-between text-xs text-[var(--app-subtle)]">
+            <span className="inline-flex items-center gap-1.5">
+              {poll.responseMode === "AUTHENTICATED" ? (
+                <>
+                  <ShieldCheck className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Authenticated Response</span>
+                </>
+              ) : (
+                <>
+                  <Globe className="h-3.5 w-3.5 text-teal-400" />
+                  <span>Anonymous Response</span>
+                </>
+              )}
+            </span>
+            <span className="text-[11px] text-[var(--app-subtle)] hidden sm:inline">
+              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-[var(--app-surface-raised)] border border-[var(--app-border)] font-mono text-[10px]">⌘+Enter</kbd> to submit
+            </span>
+          </div>
         </section>
 
+        {/* Question Cards */}
         {poll.questions.map((question, questionIndex) => (
-          <section key={question.questionId} className="question-card">
+          <section key={question.questionId} className="question-card space-y-4">
             <div className="card-heading">
-              <div><span className="eyebrow">Question {String(questionIndex + 1).padStart(2, "0")}</span><h2 className="card-title">{question.text}</h2></div>
-              {question.isRequired ? <span className="status-chip live">Required</span> : <span className="status-chip">Optional</span>}
+              <div>
+                <span className="eyebrow text-[10px]">Question {String(questionIndex + 1).padStart(2, "0")}</span>
+                <h2 className="card-title text-base sm:text-lg font-bold text-[var(--app-text)]">
+                  {question.text}
+                </h2>
+              </div>
+              {question.isRequired ? (
+                <span className="status-chip live text-[10px]">Required</span>
+              ) : (
+                <span className="status-chip text-[10px]">Optional</span>
+              )}
             </div>
-            <div className="choice-list">
-              {question.options.map((option) => (
-                <label key={option.optionId} className="choice-row">
-                  <input type="radio" name={question.questionId} value={option.optionId} checked={answers[question.questionId] === option.optionId} onChange={() => setAnswers((prev) => ({ ...prev, [question.questionId]: option.optionId }))} />
-                  {option.text}
-                </label>
-              ))}
+
+            <div className="choice-list space-y-2">
+              {question.options.map((option, oIdx) => {
+                const isSelected = answers[question.questionId] === option.optionId;
+                const letter = String.fromCharCode(65 + oIdx); // A, B, C, D...
+
+                return (
+                  <label
+                    key={option.optionId}
+                    className={`choice-row flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                      isSelected
+                        ? "border-teal-500 bg-teal-500/10 text-[var(--app-text)] shadow-xs"
+                        : "border-[var(--app-border)] text-[var(--app-muted)] hover:border-[var(--app-border-strong)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-raised)]"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={question.questionId}
+                      value={option.optionId}
+                      checked={isSelected}
+                      onChange={() =>
+                        setAnswers((prev) => ({
+                          ...prev,
+                          [question.questionId]: option.optionId,
+                        }))
+                      }
+                      className="sr-only"
+                    />
+
+                    {/* Choice Letter badge */}
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold font-mono transition-colors ${
+                        isSelected
+                          ? "bg-teal-500 text-[var(--app-primary-ink)]"
+                          : "border border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface-solid)_60%,transparent)] text-[var(--app-subtle)]"
+                      }`}
+                    >
+                      {letter}
+                    </span>
+
+                    <span className="flex-1 text-xs sm:text-sm font-medium">{option.text}</span>
+
+                    {isSelected && (
+                      <CheckCircle2 className="h-4 w-4 text-teal-400 flex-shrink-0" />
+                    )}
+                  </label>
+                );
+              })}
             </div>
           </section>
         ))}
 
-        {status.error ? <p className="alert alert-error" role="alert">{status.error}</p> : null}
-        {status.submitted ? <p className="alert alert-success" role="status">{status.message}</p> : null}
-        <button type="submit" disabled={isExpired} className="btn btn-primary">{isExpired ? "Poll expired" : "Submit response"}</button>
+        {status.error && (
+          <p className="alert alert-error text-xs" role="alert">
+            {status.error}
+          </p>
+        )}
+
+        <button
+          id="submit-poll-btn"
+          type="submit"
+          disabled={isExpired || submitting}
+          className="btn btn-primary w-full text-sm font-semibold py-3.5 justify-center gap-2"
+        >
+          <Send className="h-4 w-4" />
+          <span>{isExpired ? "Poll Expired" : submitting ? "Submitting Response…" : "Submit Response"}</span>
+        </button>
       </form>
     </AppShell>
   );

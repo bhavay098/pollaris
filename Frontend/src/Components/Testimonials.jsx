@@ -1,5 +1,6 @@
-// Marketing section with customer quotes. Static demo data; stars/avatar
-// colors are just cosmetic.
+// Marketing section with customer quotes.
+import { Star } from "lucide-react";
+
 const testimonials = [
   {
     name: "Aisha Patel",
@@ -46,20 +47,21 @@ export default function Testimonials() {
       <div className="grid md:grid-cols-3 gap-6">
         {testimonials.map((t) => (
           <div key={t.name}>
-            <div className="rounded-3xl border border-white/8 bg-zinc-800/50 p-7">
+            <div className="h-full rounded-3xl border border-white/8 bg-zinc-800/50 p-7 transition-all duration-300 hover:border-white/20">
               <div className="flex gap-1 mb-5">
                 {[...Array(t.stars)].map((_, i) => (
-                  <span key={i} className="text-teal-400 text-sm">
-                    ★
-                  </span>
+                  <Star
+                    key={i}
+                    className="h-4 w-4 fill-teal-400 text-teal-400"
+                  />
                 ))}
               </div>
               <p className="text-zinc-300 text-sm leading-relaxed mb-7">
                 "{t.quote}"
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-auto">
                 <div
-                  className={`w-10 h-10 rounded-2xl ${t.avatarColor} flex items-center justify-center text-xs font-semibold text-white`}
+                  className={`w-10 h-10 rounded-2xl ${t.avatarColor} flex items-center justify-center text-xs font-semibold text-white shadow-md`}
                 >
                   {t.avatar}
                 </div>

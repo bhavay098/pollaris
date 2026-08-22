@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { authClient } from "../lib/auth-client";
 import AppShell from "../Components/AppShell.jsx";
+import { Send, CheckCircle2 } from "lucide-react";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -55,28 +56,20 @@ export default function ForgotPassword() {
 
         <div className="auth-card">
           {isSubmitted ? (
-            <div>
+            <div className="space-y-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
               <span className="eyebrow">Email sent</span>
-              <h2>Check your inbox</h2>
+              <h2 className="text-xl font-bold">Check your inbox</h2>
               <div className="form-stack">
-                <p
-                  className="page-description"
-                  style={{ margin: "0.5rem 0 1rem" }}
-                >
+                <p className="text-xs text-[var(--app-muted)] leading-relaxed">
                   We&apos;ve sent password reset instructions to{" "}
-                  <strong>{email}</strong>. Please check your inbox and click
+                  <strong className="text-[var(--app-text)]">{email}</strong>. Please check your inbox and click
                   the link to proceed.
                 </p>
-                <div
-                  className="alert"
-                  role="status"
-                  style={{
-                    backgroundColor: "rgba(255, 255, 255, 0.04)",
-                    border: "1px solid var(--app-border)",
-                  }}
-                >
-                  The link will expire in 1 hour. If you don&apos;t see the
-                  email, check your spam or junk folder.
+                <div className="alert text-xs text-[var(--app-subtle)] border border-[var(--app-border)] bg-[var(--app-surface-raised)]" role="status">
+                  The link will expire in 1 hour. If you don&apos;t see the email, check your spam or junk folder.
                 </div>
                 <button
                   type="button"
@@ -84,7 +77,7 @@ export default function ForgotPassword() {
                     setIsSubmitted(false);
                     setError("");
                   }}
-                  className="btn btn-secondary"
+                  className="btn btn-secondary text-xs"
                 >
                   Send to a different email
                 </button>
@@ -100,12 +93,8 @@ export default function ForgotPassword() {
             <form onSubmit={onSubmit}>
               <span className="eyebrow">Password recovery</span>
               <h2>Forgot your password?</h2>
-              <p
-                className="page-description"
-                style={{ margin: "0.25rem 0 1.25rem", fontSize: "0.875rem" }}
-              >
-                Enter your email address and we will send you a link to reset
-                your password.
+              <p className="text-xs text-[var(--app-muted)] mt-1 mb-4 leading-relaxed">
+                Enter your email address and we will send you a link to reset your password.
               </p>
               <div className="form-stack">
                 <div className="field">
@@ -121,16 +110,17 @@ export default function ForgotPassword() {
                   />
                 </div>
                 {error ? (
-                  <p className="alert alert-error" role="alert">
+                  <p className="alert alert-error text-xs" role="alert">
                     {error}
                   </p>
                 ) : null}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn btn-primary"
+                  className="btn btn-primary gap-2"
                 >
-                  {loading ? "Sending reset link…" : "Send reset link"}
+                  <Send className="h-4 w-4" />
+                  <span>{loading ? "Sending reset link…" : "Send reset link"}</span>
                 </button>
               </div>
               <p className="form-footer">

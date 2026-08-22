@@ -1,12 +1,13 @@
-// Marketing section showing tool integrations. Static list of demo "chips"
-// with a placeholder icon character and a brand color.
+// Marketing section showing tool integrations.
+import { MessageSquare, FileText, Palette, CheckSquare, Layers, Video } from "lucide-react";
+
 const integrations = [
-  { name: "Slack", icon: "◈", color: "bg-emerald-500" },
-  { name: "Notion", icon: "◉", color: "bg-zinc-400" },
-  { name: "Figma", icon: "◎", color: "bg-pink-500" },
-  { name: "Linear", icon: "◌", color: "bg-violet-500" },
-  { name: "Jira", icon: "◈", color: "bg-blue-500" },
-  { name: "Zoom", icon: "◉", color: "bg-sky-500" },
+  { name: "Slack", icon: MessageSquare, color: "bg-emerald-500" },
+  { name: "Notion", icon: FileText, color: "bg-zinc-600" },
+  { name: "Figma", icon: Palette, color: "bg-pink-500" },
+  { name: "Linear", icon: Layers, color: "bg-violet-500" },
+  { name: "Jira", icon: CheckSquare, color: "bg-blue-500" },
+  { name: "Zoom", icon: Video, color: "bg-sky-500" },
 ];
 
 export default function Integrations() {
@@ -26,20 +27,23 @@ export default function Integrations() {
           </p>
         </div>
         <div className="relative grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-center gap-3 sm:gap-4">
-          {integrations.map((item) => (
-            <div key={item.name}>
-              <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border border-white/8 bg-white/4 backdrop-blur-xl cursor-pointer hover:border-white/15">
-                <div
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ${item.color} flex items-center justify-center text-sm font-semibold text-white`}
-                >
-                  {item.icon}
+          {integrations.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <div key={item.name}>
+                <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border border-white/8 bg-white/4 backdrop-blur-xl cursor-pointer hover:border-white/20 hover:bg-white/8 transition-all">
+                  <div
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl ${item.color} flex items-center justify-center text-sm font-semibold text-white shadow-sm`}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold text-zinc-200">
+                    {item.name}
+                  </span>
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-zinc-200">
-                  {item.name}
-                </span>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <p className="relative text-center mt-8 text-zinc-500 text-xs">
           Easily accessible from mobile, desktop, or tablet.

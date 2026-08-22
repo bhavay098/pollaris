@@ -5,6 +5,8 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { authClient } from "../lib/auth-client";
 import AppShell from "../Components/AppShell.jsx";
+import PasswordInput from "../Components/ui/PasswordInput.jsx";
+import { KeyRound } from "lucide-react";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -93,25 +95,24 @@ export default function ResetPassword() {
               <span className="eyebrow">New credentials</span>
               <h2>Set new password</h2>
               <div className="form-stack">
-                <div className="field">
-                  <label htmlFor="new-password">New Password</label>
-                  <input
+                <div>
+                  <PasswordInput
                     id="new-password"
+                    label="New Password"
                     placeholder="At least 8 characters"
-                    type="password"
                     autoComplete="new-password"
                     required
                     minLength={8}
+                    showStrength
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <div className="field">
-                  <label htmlFor="confirm-password">Confirm New Password</label>
-                  <input
+                <div>
+                  <PasswordInput
                     id="confirm-password"
+                    label="Confirm New Password"
                     placeholder="Re-enter your new password"
-                    type="password"
                     autoComplete="new-password"
                     required
                     minLength={8}
@@ -119,9 +120,10 @@ export default function ResetPassword() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                 </div>
-                {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
-                <button type="submit" disabled={loading} className="btn btn-primary">
-                  {loading ? "Resetting password…" : "Reset password"}
+                {error ? <p className="alert alert-error text-xs" role="alert">{error}</p> : null}
+                <button type="submit" disabled={loading} className="btn btn-primary gap-2">
+                  <KeyRound className="h-4 w-4" />
+                  <span>{loading ? "Resetting password…" : "Reset password"}</span>
                 </button>
               </div>
               <p className="form-footer">

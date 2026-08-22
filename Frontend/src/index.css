@@ -49,7 +49,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
-  overflow: hidden;
+  overflow-x: clip;
   background: var(--app-bg);
   color: var(--app-text);
 }
@@ -135,24 +135,28 @@ html[data-theme="light"] .app-shell {
 .panel-copy, .card-copy { color: var(--app-muted); font-size: 13px; line-height: 1.6; letter-spacing: -0.006em; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
-.stat-card { min-height: 126px; padding: 18px; border: 1px solid var(--app-border); border-radius: 17px; background: color-mix(in srgb, var(--app-surface-solid) 78%, transparent); }
+.stat-card { min-height: 126px; padding: 18px; border: 1px solid var(--app-border); border-radius: 17px; background: color-mix(in srgb, var(--app-surface-solid) 78%, transparent); transition: border-color 180ms ease, transform 180ms ease, background 180ms ease; }
+.stat-card.clickable { cursor: pointer; }
+.stat-card.clickable:hover { border-color: var(--app-border-strong); background: var(--app-surface-raised); transform: translateY(-2px); }
+.stat-card.active-filter { border-color: var(--app-primary); background: color-mix(in srgb, var(--app-primary) 12%, var(--app-surface-solid)); }
 .stat-value { display: block; margin-top: 16px; color: var(--app-text); font-size: 31px; font-weight: 750; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 .stat-value.accent { color: var(--app-accent); }
 .stat-value.success { color: var(--app-success); }
 
 .poll-list { display: grid; gap: 14px; }
-.poll-card { position: relative; overflow: hidden; padding: 22px; }
+.poll-card { position: relative; padding: 22px; transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
+.poll-card:has([role="menu"]) { z-index: 30; }
 .poll-card::after { position: absolute; top: 0; right: 20px; width: 64px; height: 2px; background: var(--app-primary); content: ""; }
-.poll-card:hover { border-color: var(--app-border-strong); }
+.poll-card:hover { border-color: var(--app-border-strong); transform: translateY(-1px); box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2); }
 .poll-card-title { margin: 0; color: var(--app-text); font-size: 20px; font-weight: 700; letter-spacing: -0.03em; overflow-wrap: anywhere; }
 .poll-slug, .muted { color: var(--app-subtle); }
 .poll-slug { margin-top: 5px; font-size: 12px; letter-spacing: 0.01em; }
-.poll-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 14px; color: var(--app-muted); font-size: 12px; }
-.status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border: 1px solid var(--app-border); border-radius: 999px; color: var(--app-muted); font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; }
+.poll-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; color: var(--app-muted); font-size: 12px; }
+.status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--app-border); border-radius: 999px; color: var(--app-muted); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
 .status-chip::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; }
-.status-chip.live { border-color: color-mix(in srgb, var(--app-success) 34%, transparent); color: var(--app-success); }
-.status-chip.draft { color: var(--app-subtle); }
-.status-chip.expired { border-color: color-mix(in srgb, var(--app-danger) 34%, transparent); color: var(--app-danger); }
+.status-chip.live { border-color: color-mix(in srgb, var(--app-success) 34%, transparent); color: var(--app-success); background: color-mix(in srgb, var(--app-success) 8%, transparent); }
+.status-chip.draft { color: var(--app-subtle); background: color-mix(in srgb, var(--app-muted) 8%, transparent); }
+.status-chip.expired { border-color: color-mix(in srgb, var(--app-danger) 34%, transparent); color: var(--app-danger); background: color-mix(in srgb, var(--app-danger) 8%, transparent); }
 
 /* Dashboard Toolbar */
 .dashboard-toolbar {

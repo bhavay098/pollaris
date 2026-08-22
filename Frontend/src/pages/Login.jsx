@@ -1,10 +1,11 @@
 // Login page (route "/login"). Email/password form plus a Google option.
-// On success it navigates to the redirect target or dashboard.
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
 import GoogleIcon from "../Components/ui/GoogleIcon.jsx";
+import PasswordInput from "../Components/ui/PasswordInput.jsx";
+import { LogIn } from "lucide-react";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -58,21 +59,46 @@ export default function Login() {
           <div className="form-stack">
             <div className="field">
               <label htmlFor="login-email">Email</label>
-              <input id="login-email" placeholder="you@company.com" type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              <input
+                id="login-email"
+                placeholder="you@company.com"
+                type="email"
+                autoComplete="email"
+                required
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              />
             </div>
-            <div className="field">
-              <label htmlFor="login-password">Password</label>
-              <input id="login-password" placeholder="Your password" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Link to={forgotPasswordLink} className="link-accent" style={{ fontSize: "0.8125rem" }}>
+            <div>
+              <PasswordInput
+                id="login-password"
+                label="Password"
+                placeholder="Your password"
+                autoComplete="current-password"
+                required
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+              />
+              <div className="flex justify-end mt-1.5">
+                <Link to={forgotPasswordLink} className="link-accent text-xs">
                   Forgot password?
                 </Link>
               </div>
             </div>
-            {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
-            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Logging in…" : "Log in"}</button>
+
+            {error ? <p className="alert alert-error text-xs" role="alert">{error}</p> : null}
+
+            <button type="submit" disabled={loading} className="btn btn-primary gap-2">
+              <LogIn className="h-4 w-4" />
+              <span>{loading ? "Logging in…" : "Log in"}</span>
+            </button>
+
             <div className="auth-divider">or continue with</div>
-            <button type="button" disabled={loading} onClick={onGoogleLogin} className="btn btn-secondary"><GoogleIcon /> Continue with Google</button>
+
+            <button type="button" disabled={loading} onClick={onGoogleLogin} className="btn btn-secondary">
+              <GoogleIcon />
+              <span>Continue with Google</span>
+            </button>
           </div>
           <p className="form-footer">No account? <Link className="link-accent" to={registerLink}>Create one</Link></p>
         </form>

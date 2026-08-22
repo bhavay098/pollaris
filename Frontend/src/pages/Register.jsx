@@ -5,9 +5,10 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
 import AppShell from "../Components/AppShell.jsx";
 import GoogleIcon from "../Components/ui/GoogleIcon.jsx";
+import PasswordInput from "../Components/ui/PasswordInput.jsx";
+import { UserPlus } from "lucide-react";
 
 export default function Register() {
-  // Single state object for the three form fields.
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,7 +17,6 @@ export default function Register() {
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/dashboard";
 
-  // Email/password signup: create the account, then go to redirect target or dashboard.
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -25,14 +25,12 @@ export default function Register() {
       await register(form);
       navigate(redirectUrl, { replace: true });
     } catch (err) {
-      // Keep the user on the form and show why registration failed.
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Google signup: redirects to Google; on failure we stay and show the error.
   const onGoogleSignup = async () => {
     setError("");
     setLoading(true);
@@ -61,20 +59,54 @@ export default function Register() {
           <div className="form-stack">
             <div className="field">
               <label htmlFor="register-name">Name</label>
-              <input id="register-name" autoComplete="name" placeholder="Your name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <input
+                id="register-name"
+                autoComplete="name"
+                placeholder="Your name"
+                required
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
             </div>
             <div className="field">
               <label htmlFor="register-email">Email</label>
-              <input id="register-email" autoComplete="email" placeholder="you@company.com" type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              <input
+                id="register-email"
+                autoComplete="email"
+                placeholder="you@company.com"
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              />
             </div>
-            <div className="field">
-              <label htmlFor="register-password">Password</label>
-              <input id="register-password" autoComplete="new-password" placeholder="At least 8 characters" type="password" minLength={8} required value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+            <div>
+              <PasswordInput
+                id="register-password"
+                label="Password"
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                showStrength
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+              />
             </div>
-            {error ? <p className="alert alert-error" role="alert">{error}</p> : null}
-            <button type="submit" disabled={loading} className="btn btn-primary">{loading ? "Creating account…" : "Create account"}</button>
+
+            {error ? <p className="alert alert-error text-xs" role="alert">{error}</p> : null}
+
+            <button type="submit" disabled={loading} className="btn btn-primary gap-2">
+              <UserPlus className="h-4 w-4" />
+              <span>{loading ? "Creating account…" : "Create account"}</span>
+            </button>
+
             <div className="auth-divider">or continue with</div>
-            <button type="button" disabled={loading} onClick={onGoogleSignup} className="btn btn-secondary"><GoogleIcon /> Continue with Google</button>
+
+            <button type="button" disabled={loading} onClick={onGoogleSignup} className="btn btn-secondary">
+              <GoogleIcon />
+              <span>Continue with Google</span>
+            </button>
           </div>
           <p className="form-footer">Have an account? <Link className="link-accent" to={loginLink}>Log in</Link></p>
         </form>

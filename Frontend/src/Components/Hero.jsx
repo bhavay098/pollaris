@@ -3,12 +3,13 @@
 import ActionButton from "./ui/ActionButton.jsx";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/auth-store";
+import { Radio, TrendingUp, Users, ArrowRight } from "lucide-react";
 
 // Marketing stats shown under the CTAs.
 const stats = [
-  { value: "14K+", label: "Live Responses" },
-  { value: "3.8K+", label: "Polls Created" },
-  { value: "99.9%", label: "Realtime Sync" },
+  { value: "14K+", label: "Live Responses", icon: Users },
+  { value: "3.8K+", label: "Polls Created", icon: Radio },
+  { value: "99.9%", label: "Realtime Sync", icon: TrendingUp },
 ];
 
 // Mock poll results rendered in the demo card.
@@ -43,8 +44,8 @@ export default function Hero() {
       <div className="grid lg:grid-cols-2 gap-20 items-center">
         <div>
           <div className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-teal-400/20 bg-teal-400/[0.07]">
-            <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-            <span className="text-xs text-teal-300 tracking-[0.12em] uppercase font-medium">
+            <Radio className="h-3.5 w-3.5 text-teal-400 animate-pulse" />
+            <span className="text-xs text-teal-300 tracking-[0.12em] uppercase font-semibold">
               WebSocket Powered Live Polling
             </span>
           </div>
@@ -63,9 +64,10 @@ export default function Hero() {
             <ActionButton
               as={Link}
               to={authTarget}
-              className="w-full sm:w-auto px-7 py-3.5 justify-center"
+              className="w-full sm:w-auto px-7 py-3.5 justify-center gap-2"
             >
-              Launch Poll
+              <span>{user ? "Go to Dashboard" : "Launch Poll"}</span>
+              <ArrowRight className="h-4 w-4" />
             </ActionButton>
             <ActionButton
               as={Link}
@@ -73,23 +75,29 @@ export default function Hero() {
               variant="secondary"
               className="w-full sm:w-auto px-7 py-3.5 justify-center"
             >
-              Login
+              {user ? "Create Poll" : "Login"}
             </ActionButton>
           </div>
           <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {stats.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-xl p-5"
-              >
-                <div className="text-2xl font-bold text-white">
-                  {item.value}
+            {stats.map((item) => {
+              const StatIcon = item.icon;
+              return (
+                <div
+                  key={item.label}
+                  className="rounded-2xl border border-white/8 bg-white/3 backdrop-blur-xl p-5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold text-white">
+                      {item.value}
+                    </div>
+                    <StatIcon className="h-4 w-4 text-teal-400/80" />
+                  </div>
+                  <div className="mt-1.5 text-xs text-zinc-500 font-medium tracking-[0.04em]">
+                    {item.label}
+                  </div>
                 </div>
-                <div className="mt-1.5 text-xs text-zinc-500 font-medium tracking-[0.04em]">
-                  {item.label}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

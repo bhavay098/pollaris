@@ -11,8 +11,11 @@ import DashboardToolbar from "../Components/dashboard/DashboardToolbar.jsx";
 import DashboardSkeleton from "../Components/dashboard/DashboardSkeleton.jsx";
 import { FilteredEmptyState, FirstPollEmptyState } from "../Components/dashboard/DashboardEmptyStates.jsx";
 import PollCard from "../Components/dashboard/PollCard.jsx";
+import SharePollModal from "../Components/dashboard/SharePollModal.jsx";
+import ConfirmModal from "../Components/common/ConfirmModal.jsx";
 import Pagination from "../Components/ui/Pagination.jsx";
 import usePollActions from "../hooks/usePollActions.js";
+import { Plus } from "lucide-react";
 
 export default function Dashboard() {
   const [polls, setPolls] = useState([]);
@@ -40,6 +43,10 @@ export default function Dashboard() {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
 
+  // Modals state
+  const [sharingPoll, setSharingPoll] = useState(null);
+  const [deletingPoll, setDeletingPoll] = useState(null);
+
   const { user } = useAuthStore();
 
   // Incrementing refreshKey triggers a background refetch
@@ -53,7 +60,7 @@ export default function Dashboard() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1); // Reset to page 1 on new search
+      setPage(1);
     }, 250);
 
     return () => clearTimeout(timer);
@@ -124,6 +131,12 @@ export default function Dashboard() {
     setPage(1);
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!deletingPoll) return;
+    await actions.deletePoll(deletingPoll.id);
+    setDeletingPoll(null);
+  };
+
   const isFiltered = Boolean(debouncedSearch || status !== "all");
 
   return (
@@ -137,12 +150,19 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="page-actions">
-          <Link className="btn btn-primary" to="/dashboard/polls/new">Create poll</Link>
+          <Link className="btn btn-primary gap-2" to="/dashboard/polls/new">
+            <Plus className="h-4 w-4" />
+            <span>Create Poll</span>
+          </Link>
         </div>
       </div>
 
-      {/* Summary stats computed across all user polls */}
-      <DashboardStats stats={stats} />
+      {/* Summary stats computed across all user polls (interactive filter) */}
+      <DashboardStats
+        stats={stats}
+        activeStatus={status}
+        onStatusChange={handleStatusChange}
+      />
 
       {/* Search, Filter & Sort Toolbar */}
       <DashboardToolbar
@@ -176,8 +196,8 @@ export default function Dashboard() {
                 onUnpublish={actions.unpublishPoll}
                 onPublishResults={actions.publishResults}
                 onUnpublishResults={actions.unpublishResults}
-                onShare={actions.sharePoll}
-                onDelete={actions.deletePoll}
+                onShare={(p) => setSharingPoll(p)}
+                onDelete={(p) => setDeletingPoll(p)}
               />
             ))}
           </div>
@@ -201,6 +221,24 @@ export default function Dashboard() {
           <FirstPollEmptyState />
         )
       ) : null}
+
+      {/* Share Poll Modal */}
+      <SharePollModal
+        isOpen={Boolean(sharingPoll)}
+        onClose={() => setSharingPoll(null)}
+        poll={sharingPoll}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deletingPoll)}
+        onClose={() => setDeletingPoll(null)}
+        onConfirm={handleDeleteConfirm}
+        title={`Delete "${deletingPoll?.title}"?`}
+        description="All recorded responses and analytics for this poll will be permanently deleted. This action cannot be undone."
+        confirmText="Delete Poll"
+        isLoading={Boolean(actions.deletingId)}
+      />
     </AppShell>
   );
 }

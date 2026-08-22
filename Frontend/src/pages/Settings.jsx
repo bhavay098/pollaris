@@ -8,25 +8,32 @@ import { useAuthStore } from "../store/auth-store";
 import { authClient } from "../lib/auth-client";
 import Button from "../Components/ui/Button.jsx";
 import Input from "../Components/ui/Input.jsx";
+import PasswordInput from "../Components/ui/PasswordInput.jsx";
+import Tabs from "../Components/ui/Tabs.jsx";
+import ConfirmModal from "../Components/common/ConfirmModal.jsx";
 import { Card, CardHeader, CardTitle, CardEyebrow, CardContent } from "../Components/ui/Card.jsx";
+import { User, Lock, AlertTriangle, ArrowLeft, Save, KeyRound, Trash2 } from "lucide-react";
 
 export default function Settings() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Profile Form State: the editable name field plus a busy flag.
+  const [activeTab, setActiveTab] = useState("profile");
+
+  // Profile Form State
   const [name, setName] = useState(user?.name || "");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
-  // Password Form State: both inputs plus a busy flag.
+  // Password Form State
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
-  // Delete Account State: busy flag so the button can't be double-clicked.
+  // Delete Account State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Call better-auth to rename the user, then confirm with a toast.
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsUpdatingProfile(true);
@@ -41,8 +48,6 @@ export default function Settings() {
     }
   };
 
-  // Ask better-auth to change the password and revoke all other sessions so a
-  // leaked/stolen session dies with the old password. Clear fields on success.
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setIsUpdatingPassword(true);
@@ -53,7 +58,7 @@ export default function Settings() {
         revokeOtherSessions: true,
       });
       if (error) throw error;
-      
+
       toast.success("Password changed successfully!");
       setCurrentPassword("");
       setNewPassword("");
@@ -64,40 +69,57 @@ export default function Settings() {
     }
   };
 
-  // Permanently delete the account after a confirm dialog, then go home.
   const handleDeleteAccount = async () => {
-    if (!window.confirm("Are you absolutely sure you want to delete your account? This action cannot be undone.")) return;
-    
     setIsDeleting(true);
     try {
       const { error } = await authClient.deleteUser();
       if (error) throw error;
-      
+
       toast.success("Account deleted.");
       navigate("/");
     } catch (err) {
       toast.error(err.message || "Failed to delete account");
     } finally {
       setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
   return (
     <AppShell>
-      <div className="page-heading">
+      <div className="page-heading flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <span className="eyebrow">Account management</span>
           <h1 className="page-title">Settings</h1>
-          <p className="page-description">Manage your profile details and security preferences.</p>
+          <p className="page-description">
+            Manage your profile details and security preferences.
+          </p>
         </div>
-        <Link to="/dashboard" className="btn btn-quiet">Back to dashboard</Link>
+        <Link to="/dashboard" className="btn btn-quiet text-xs gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          <span>Dashboard</span>
+        </Link>
       </div>
 
-      <div className="builder-grid">
-        <Card className="builder-details" aria-labelledby="profile-heading">
+      {/* Tabs Switcher */}
+      <div className="mb-6">
+        <Tabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          tabs={[
+            { id: "profile", label: "Profile", icon: <User className="h-3.5 w-3.5" /> },
+            { id: "security", label: "Security & Password", icon: <Lock className="h-3.5 w-3.5" /> },
+            { id: "danger", label: "Danger Zone", icon: <AlertTriangle className="h-3.5 w-3.5" /> },
+          ]}
+        />
+      </div>
+
+      {/* Profile Section */}
+      {activeTab === "profile" && (
+        <Card className="builder-details max-w-2xl animate-in fade-in duration-200" aria-labelledby="profile-heading">
           <CardHeader>
             <CardEyebrow>Personal Info</CardEyebrow>
-            <CardTitle id="profile-heading">Profile</CardTitle>
+            <CardTitle id="profile-heading">Profile Details</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleUpdateProfile} className="flex flex-col gap-4">
@@ -115,84 +137,113 @@ export default function Settings() {
                 value={user?.email || ""}
                 disabled
                 className="opacity-60 cursor-not-allowed"
-                title="Email cannot be changed"
+                helpText="Email address is tied to your account and cannot be changed."
               />
-              <div className="button-row" style={{ marginTop: "1rem" }}>
-                <Button 
-                  type="submit" 
-                  isLoading={isUpdatingProfile} 
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  isLoading={isUpdatingProfile}
                   loadingText="Saving…"
-                  disabled={name === user?.name}
+                  disabled={name === user?.name || !name.trim()}
+                  className="gap-2"
                 >
-                  Save profile
+                  <Save className="h-4 w-4" />
+                  <span>Save Profile</span>
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
+      )}
 
-        <Card className="builder-details" aria-labelledby="security-heading">
+      {/* Security Section */}
+      {activeTab === "security" && (
+        <Card className="builder-details max-w-2xl animate-in fade-in duration-200" aria-labelledby="security-heading">
           <CardHeader>
             <CardEyebrow>Security</CardEyebrow>
-            <CardTitle id="security-heading">Password</CardTitle>
+            <CardTitle id="security-heading">Change Password</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-              <Input
+              <PasswordInput
                 id="current-password"
                 label="Current Password"
-                type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
                 placeholder="Enter current password"
+                autoComplete="current-password"
               />
-              <Input
+              <PasswordInput
                 id="new-password"
                 label="New Password"
-                type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                placeholder="Enter new password"
+                placeholder="Enter new password (min 8 chars)"
+                autoComplete="new-password"
+                showStrength
                 minLength={8}
+                helpText="Changing your password will automatically revoke other active sessions for security."
               />
-              <div className="button-row" style={{ marginTop: "1rem" }}>
-                <Button 
-                  type="submit" 
-                  isLoading={isUpdatingPassword} 
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  isLoading={isUpdatingPassword}
                   loadingText="Updating…"
-                  disabled={!currentPassword || !newPassword}
+                  disabled={!currentPassword || !newPassword || newPassword.length < 8}
+                  className="gap-2"
                 >
-                  Update password
+                  <KeyRound className="h-4 w-4" />
+                  <span>Update Password</span>
                 </Button>
               </div>
             </form>
           </CardContent>
         </Card>
+      )}
 
-        <Card className="builder-details border-red-500/20" aria-labelledby="danger-heading">
+      {/* Danger Zone Section */}
+      {activeTab === "danger" && (
+        <Card className="builder-details border-red-500/20 max-w-2xl animate-in fade-in duration-200" aria-labelledby="danger-heading">
           <CardHeader>
-            <CardEyebrow className="text-red-500">Danger Zone</CardEyebrow>
+            <CardEyebrow className="text-red-400">Danger Zone</CardEyebrow>
             <CardTitle id="danger-heading">Delete Account</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-              Once you delete your account, there is no going back. All of your polls and responses will be permanently deleted. Please be certain.
+            <p className="text-xs sm:text-sm text-[var(--app-muted)] mb-5 leading-relaxed">
+              Once you delete your account, there is no going back. All of your created polls, historical responses, and live analytics will be permanently erased.
             </p>
-            <div className="button-row">
-              <Button 
+            <div>
+              <Button
                 variant="danger"
-                onClick={handleDeleteAccount}
-                isLoading={isDeleting}
-                loadingText="Deleting…"
+                onClick={() => {
+                  setDeleteConfirmText("");
+                  setShowDeleteModal(true);
+                }}
+                className="gap-2"
               >
-                Delete my account
+                <Trash2 className="h-4 w-4" />
+                <span>Delete My Account</span>
               </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* Delete Account Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        title="Permanently delete your account?"
+        description="This action is irreversible. All of your polls and data will be erased forever."
+        confirmText="Delete Account"
+        isLoading={isDeleting}
+        verificationString="DELETE"
+        verificationInput={deleteConfirmText}
+        onVerificationChange={setDeleteConfirmText}
+      />
     </AppShell>
   );
 }

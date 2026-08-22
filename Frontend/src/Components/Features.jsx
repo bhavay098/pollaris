@@ -1,32 +1,33 @@
 // Marketing section listing the platform's four main capabilities.
-// Data is static: each feature just supplies its title, blurb, icon, and color.
+import { Activity, Share2, PieChart, Zap } from "lucide-react";
+
 const features = [
   {
     title: "Live Analytics",
     description:
       "Watch responses update instantly with immersive real-time dashboards powered by WebSockets.",
-    icon: "◈",
+    icon: Activity,
     bgColor: "bg-teal-500",
   },
   {
     title: "Smart Poll Sharing",
     description:
       "Share beautiful public poll links with built-in expiry, access control, and publishing.",
-    icon: "◉",
+    icon: Share2,
     bgColor: "bg-sky-500",
   },
   {
     title: "Audience Insights",
     description:
       "Understand participation patterns, completion rates, and live engagement trends.",
-    icon: "◎",
+    icon: PieChart,
     bgColor: "bg-indigo-500",
   },
   {
     title: "Realtime Collaboration",
     description:
       "Synchronize poll activity and analytics across devices without refreshing the page.",
-    icon: "◌",
+    icon: Zap,
     bgColor: "bg-cyan-500",
   },
 ];
@@ -49,23 +50,26 @@ export default function Features() {
         </p>
       </div>
       <div className="mt-16 grid md:grid-cols-2 xl:grid-cols-4 gap-5">
-        {features.map((feature) => (
-          <div key={feature.title} className="h-full">
-            <div className="group flex h-full flex-col rounded-3xl border border-white/8 bg-zinc-800/50 p-7">
-              <div
-                className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center text-lg font-semibold text-white`}
-              >
-                {feature.icon}
+        {features.map((feature) => {
+          const IconComponent = feature.icon;
+          return (
+            <div key={feature.title} className="h-full">
+              <div className="group flex h-full flex-col rounded-3xl border border-white/8 bg-zinc-800/50 p-7 transition-all duration-300 hover:border-teal-500/30 hover:shadow-xl hover:shadow-teal-500/5">
+                <div
+                  className={`w-12 h-12 rounded-2xl ${feature.bgColor} flex items-center justify-center text-white shadow-lg`}
+                >
+                  <IconComponent className="h-6 w-6" />
+                </div>
+                <h4 className="mt-6 text-lg font-bold text-white">
+                  {feature.title}
+                </h4>
+                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                  {feature.description}
+                </p>
               </div>
-              <h4 className="mt-6 text-lg font-bold text-white">
-                {feature.title}
-              </h4>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                {feature.description}
-              </p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
